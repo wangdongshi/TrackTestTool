@@ -396,6 +396,11 @@
               <FilePath>../Src/freertos.c</FilePath>
             </File>
             <File>
+              <FileName>ad7608.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ad7608.c</FilePath>
+            </File>
+            <File>
               <FileName>stm32f4xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f4xx_it.c</FilePath>

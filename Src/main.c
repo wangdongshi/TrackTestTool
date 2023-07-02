@@ -52,13 +52,14 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "adc7608.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart1;
 
 osThreadId defaultTaskHandle;
+osThreadId adcTaskHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -132,7 +133,8 @@ int main(void)
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+  osThreadDef(adcTask, ADC_Task, osPriorityBelowNormal, 0, 128);
+  adcTaskHandle = osThreadCreate(osThread(adcTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
