@@ -310,7 +310,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -330,7 +330,7 @@
             <vShortWch>1</vShortWch>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32F407xx</Define>
+              <Define>USE_FULL_ASSERT,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
               <IncludePath>../Inc;         ../Drivers/STM32F4xx_HAL_Driver/Inc;         ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;         ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;         ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;         ../Middlewares/Third_Party/FreeRTOS/Source/include;         ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;         ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
@@ -414,6 +414,16 @@
               <FileName>stm32f4xx_hal_timebase_TIM.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/stm32f4xx_hal_timebase_TIM.c</FilePath>
+            </File>
+            <File>
+              <FileName>debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>redirection.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\redirection.c</FilePath>
             </File>
           </Files>
         </Group>

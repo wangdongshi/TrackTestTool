@@ -426,7 +426,12 @@
 #endif /* HAL_LPTIM_MODULE_ENABLED */
    
 /* Exported macro ------------------------------------------------------------*/
+#include "stm32_assert.h"
+
+#if 0 // Delete by WangYu 2023/7/5
+
 #ifdef  USE_FULL_ASSERT
+
 /**
   * @brief  The assert_param macro is used for function's parameters check.
   * @param  expr: If expr is false, it calls assert_failed function
@@ -442,6 +447,8 @@
   #define assert_param(expr) ((void)0U)
 #endif /* USE_FULL_ASSERT */    
 
+#endif
+  
 #ifdef __cplusplus
 }
 #endif

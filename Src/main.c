@@ -52,6 +52,7 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN Includes */
+#include "debug.h"
 #include "adc7608.h"
 /* USER CODE END Includes */
 
@@ -277,8 +278,8 @@ void StartDefaultTask(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
-  uint8_t tx_buffer[38] = "Welcome to STM32F407VET6 Core Board!\r\n";
-  HAL_UART_Transmit(&huart1, tx_buffer, sizeof(tx_buffer), 0xffff);
+  assert_param(1 == 1); // for test assert
+  PRINTF("Welcome to STM32F407VET6 Core Board!\r\n");
   
   /* Infinite loop */
   for(;;)
@@ -341,6 +342,8 @@ void assert_failed(uint8_t* file, uint32_t line)
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+	printf("Wrong parameters value: file %s on line %d.\r\n", file, (int)line);
+	while(1);
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

@@ -2,10 +2,18 @@
  * Copyright (c) 2023 - 2035 by WangYu
  * All rights reserved
  *
- * Filename : ad7608.h
+ * Filename : debug.c
  * Project  : Track Test Tool
  * Date     : 2023/7/3
  * Author   : WangYu
  *
  **********************************************************************/
-extern void ADC_Task(void const * argument);
+#include "debug.h"
+
+#ifndef DEBUG
+
+void PRINTF(const char *format, ...)
+{
+}
+
+#endif
