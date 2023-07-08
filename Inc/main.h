@@ -69,8 +69,48 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define NST3_Pin LL_GPIO_PIN_5
+#define NST3_GPIO_Port GPIOE
 #define LED1_Pin LL_GPIO_PIN_13
 #define LED1_GPIO_Port GPIOC
+#define RS485_REDE_Pin LL_GPIO_PIN_1
+#define RS485_REDE_GPIO_Port GPIOA
+#define RS485_TX_Pin LL_GPIO_PIN_2
+#define RS485_TX_GPIO_Port GPIOA
+#define RS485_RX_Pin LL_GPIO_PIN_3
+#define RS485_RX_GPIO_Port GPIOA
+#define ADC_CS_Pin LL_GPIO_PIN_4
+#define ADC_CS_GPIO_Port GPIOA
+#define ADC_SCLK_Pin LL_GPIO_PIN_5
+#define ADC_SCLK_GPIO_Port GPIOA
+#define ADC_DOUTA_Pin LL_GPIO_PIN_6
+#define ADC_DOUTA_GPIO_Port GPIOA
+#define ADC_RESET_Pin LL_GPIO_PIN_7
+#define ADC_RESET_GPIO_Port GPIOA
+#define ADC_CONVST_Pin LL_GPIO_PIN_4
+#define ADC_CONVST_GPIO_Port GPIOC
+#define ADC_BUSY_Pin LL_GPIO_PIN_5
+#define ADC_BUSY_GPIO_Port GPIOC
+#define ENCODER_A_Pin LL_GPIO_PIN_9
+#define ENCODER_A_GPIO_Port GPIOE
+#define ENCODER_B_Pin LL_GPIO_PIN_11
+#define ENCODER_B_GPIO_Port GPIOE
+#define GYRO1_TX_Pin LL_GPIO_PIN_10
+#define GYRO1_TX_GPIO_Port GPIOB
+#define GYRO1_RX_Pin LL_GPIO_PIN_11
+#define GYRO1_RX_GPIO_Port GPIOB
+#define NST2_Pin LL_GPIO_PIN_12
+#define NST2_GPIO_Port GPIOD
+#define GYRO2_TX_Pin LL_GPIO_PIN_6
+#define GYRO2_TX_GPIO_Port GPIOC
+#define GYRO2_RX_Pin LL_GPIO_PIN_7
+#define GYRO2_RX_GPIO_Port GPIOC
+#define DEBUG_TX_Pin LL_GPIO_PIN_9
+#define DEBUG_TX_GPIO_Port GPIOA
+#define DEBUG_RX_Pin LL_GPIO_PIN_10
+#define DEBUG_RX_GPIO_Port GPIOA
+#define NST1_Pin LL_GPIO_PIN_4
+#define NST1_GPIO_Port GPIOB
 
 /* ########################## Assert Selection ############################## */
 /**

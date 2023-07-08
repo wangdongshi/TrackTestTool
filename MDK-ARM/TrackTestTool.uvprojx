@@ -109,13 +109,13 @@
         </CommonProperty>
         <DllOption>
           <SimDllName>SARMCM3.DLL</SimDllName>
-          <SimDllArguments>-REMAP</SimDllArguments>
-          <SimDlgDll>DARMSTM.DLL</SimDlgDll>
-          <SimDlgDllArguments>-pSTM32F407VE</SimDlgDllArguments>
+          <SimDllArguments>-REMAP -MPU</SimDllArguments>
+          <SimDlgDll>DCM.DLL</SimDlgDll>
+          <SimDlgDllArguments>-pCM4</SimDlgDllArguments>
           <TargetDllName>SARMCM3.DLL</TargetDllName>
-          <TargetDllArguments></TargetDllArguments>
-          <TargetDlgDll>TARMSTM.DLL</TargetDlgDll>
-          <TargetDlgDllArguments>-pSTM32F407VE</TargetDlgDllArguments>
+          <TargetDllArguments>-MPU</TargetDllArguments>
+          <TargetDlgDll>TCM.DLL</TargetDlgDll>
+          <TargetDlgDllArguments>-pCM4</TargetDlgDllArguments>
         </DllOption>
         <DebugOption>
           <OPTHX>
@@ -332,7 +332,7 @@
               <MiscControls></MiscControls>
               <Define>USE_FULL_ASSERT,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;         ../Drivers/STM32F4xx_HAL_Driver/Inc;         ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;         ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;         ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;         ../Middlewares/Third_Party/FreeRTOS/Source/include;         ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;         ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;           ../Drivers/STM32F4xx_HAL_Driver/Inc;           ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;           ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;           ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;           ../Middlewares/Third_Party/FreeRTOS/Source/include;           ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;           ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -386,6 +386,21 @@
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
+              <FileName>ad7608.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ad7608.c</FilePath>
+            </File>
+            <File>
+              <FileName>debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>redirection.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\redirection.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/main.c</FilePath>
@@ -394,11 +409,6 @@
               <FileName>freertos.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/freertos.c</FilePath>
-            </File>
-            <File>
-              <FileName>ad7608.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\ad7608.c</FilePath>
             </File>
             <File>
               <FileName>stm32f4xx_it.c</FileName>
@@ -415,16 +425,6 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32f4xx_hal_timebase_TIM.c</FilePath>
             </File>
-            <File>
-              <FileName>debug.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\debug.c</FilePath>
-            </File>
-            <File>
-              <FileName>redirection.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\redirection.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -439,6 +439,11 @@
               <FileName>stm32f4xx_ll_exti.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_hal_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c</FilePath>
             </File>
             <File>
               <FileName>stm32f4xx_hal_tim.c</FileName>
