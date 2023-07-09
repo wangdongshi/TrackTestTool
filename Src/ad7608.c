@@ -34,45 +34,45 @@
 
 /* External Variables --------------------------------------------------------*/
 extern SPI_HandleTypeDef hspi1;
+extern osSemaphoreId triggerADCSemHandle;
 
 /* Private Variables ---------------------------------------------------------*/
 uint8_t  buff[18];
 uint32_t adc_data[8]; // data length = 18 bit
 
 /* Private function prototypes -----------------------------------------------*/
-void AD7608_RESET(void);
-void AD7608_TRIGGER(void);
-void Delay(uint32_t nCount);
+static void AD7608_RESET(void);
+static void AD7608_TRIGGER(void);
+static void Delay(uint32_t nCount);
 
 /* Formal function definitions -----------------------------------------------*/
-int ADC_Task(void) 
+int ADCTask(void) 
 {
   AD7608_RESET();
   
-  do {
+  while(1) {
+    osSemaphoreWait(triggerADCSemHandle, osWaitForever);
     AD7608_TRIGGER();
     while(AD7608_BUSY) {};
     HAL_SPI_Receive_DMA(&hspi1, buff, 18);
-    osDelay(2000);
   }
-  while(1);
 }
 
-void AD7608_RESET(void)
+static void AD7608_RESET(void)
 {
   AD7608_RESET_H;
   Delay(0xFF);
   AD7608_RESET_L;
 }
 
-void AD7608_TRIGGER(void)
+static void AD7608_TRIGGER(void)
 {
   AD7608_CONVSTA_L;
   Delay(0xF);
   AD7608_CONVSTA_H;
 }
 
-void Delay(uint32_t nCount) 
+static void Delay(uint32_t nCount) 
 { 
   for(; nCount != 0; nCount--); 
 }

@@ -64,12 +64,14 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
+DMA_HandleTypeDef hdma_usart2_tx;
 
-osThreadId defaultTaskHandle;
+osThreadId MAIN_TASKHandle;
+osThreadId ADC_TASKHandle;
+osSemaphoreId triggerADCSemHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-osThreadId adcTaskHandle;
 
 /* USER CODE END PV */
 
@@ -82,7 +84,8 @@ static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USART6_UART_Init(void);
-void StartDefaultTask(void const * argument);
+void mainTask(void const * argument);
+void ADCTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -136,6 +139,11 @@ int main(void)
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
 
+  /* Create the semaphores(s) */
+  /* definition and creation of triggerADCSem */
+  osSemaphoreDef(triggerADCSem);
+  triggerADCSemHandle = osSemaphoreCreate(osSemaphore(triggerADCSem), 1);
+
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -145,13 +153,16 @@ int main(void)
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
-  /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+  /* definition and creation of MAIN_TASK */
+  osThreadDef(MAIN_TASK, mainTask, osPriorityNormal, 0, 128);
+  MAIN_TASKHandle = osThreadCreate(osThread(MAIN_TASK), NULL);
+
+  /* definition and creation of ADC_TASK */
+  osThreadDef(ADC_TASK, ADCTask, osPriorityBelowNormal, 0, 128);
+  ADC_TASKHandle = osThreadCreate(osThread(ADC_TASK), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  osThreadDef(adcTask, ADC_Task, osPriorityBelowNormal, 0, 128);
-  adcTaskHandle = osThreadCreate(osThread(adcTask), NULL);
+  /* add tasks, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -342,8 +353,12 @@ static void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Stream6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
@@ -440,8 +455,8 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
-/* StartDefaultTask function */
-void StartDefaultTask(void const * argument)
+/* mainTask function */
+void mainTask(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
@@ -449,14 +464,24 @@ void StartDefaultTask(void const * argument)
   PRINTF("Welcome to STM32F407VET6 Core Board!\r\n");
   
   /* Infinite loop */
-  for(;;)
-  {
-    LL_GPIO_SetOutputPin(LED1_GPIO_Port, LED1_Pin);
-    osDelay(500);
-    LL_GPIO_ResetOutputPin(LED1_GPIO_Port, LED1_Pin);
-    osDelay(500);
+  while(1) {
+    osSemaphoreRelease(triggerADCSemHandle);
+    LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+    osDelay(1000);
   }
   /* USER CODE END 5 */ 
+}
+
+/* ADCTask function */
+__weak void ADCTask(void const * argument)
+{
+  /* USER CODE BEGIN ADCTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END ADCTask */
 }
 
 /**
