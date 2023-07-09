@@ -72,6 +72,7 @@ osSemaphoreId triggerADCSemHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+uint32_t adc_data[8]; // data length = 18 bit
 
 /* USER CODE END PV */
 

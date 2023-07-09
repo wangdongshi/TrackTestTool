@@ -38,7 +38,7 @@ extern osSemaphoreId triggerADCSemHandle;
 
 /* Private Variables ---------------------------------------------------------*/
 uint8_t  buff[18];
-uint32_t adc_data[8]; // data length = 18 bit
+extern uint32_t adc_data[8];
 
 /* Private function prototypes -----------------------------------------------*/
 static void AD7608_RESET(void);
@@ -46,7 +46,7 @@ static void AD7608_TRIGGER(void);
 static void Delay(uint32_t nCount);
 
 /* Formal function definitions -----------------------------------------------*/
-int ADCTask(void) 
+void ADCTask(void const * argument)
 {
   AD7608_RESET();
   
@@ -100,4 +100,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
     if (i == 3 || i == 7) PRINTF("\r\n");
     if (i == 7) PRINTF("\r\n");
   }
+  
+  PRINTF2("ADC_DATA:%d,%d,%d,%d,%d,%d,%d,%d\r\n", adc_data[0], adc_data[1], 
+    adc_data[2], adc_data[3], adc_data[4], adc_data[5], adc_data[6], adc_data[7]);
 }

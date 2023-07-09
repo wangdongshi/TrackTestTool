@@ -25,4 +25,6 @@ void PRINTF(const char *format, ...);
 
 #endif
 
+void PRINTF2(const char *format,...);
+
 #endif // __DEBUG_H__
