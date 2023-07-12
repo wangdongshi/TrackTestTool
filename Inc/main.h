@@ -99,6 +99,10 @@
 #define GYRO1_TX_GPIO_Port GPIOB
 #define GYRO1_RX_Pin LL_GPIO_PIN_11
 #define GYRO1_RX_GPIO_Port GPIOB
+#define IN_DI_A_Pin LL_GPIO_PIN_14
+#define IN_DI_A_GPIO_Port GPIOB
+#define IN_DI_B_Pin LL_GPIO_PIN_9
+#define IN_DI_B_GPIO_Port GPIOD
 #define NST2_Pin LL_GPIO_PIN_12
 #define NST2_GPIO_Port GPIOD
 #define GYRO2_TX_Pin LL_GPIO_PIN_6

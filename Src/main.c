@@ -54,6 +54,7 @@
 /* USER CODE BEGIN Includes */
 #include "debug.h"
 #include "adc7608.h"
+#include "gyro97B.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -68,11 +69,15 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 osThreadId MAIN_TASKHandle;
 osThreadId ADC_TASKHandle;
-osSemaphoreId triggerADCSemHandle;
+osThreadId SENSOR_TASKHandle;
+osSemaphoreId AdcConvertStartSemHandle;
+osSemaphoreId AdcConvertCompleteSemHandle;
+osSemaphoreId EncoderArriveSemHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint32_t adc_data[8]; // data length = 18 bit
+uint32_t adc[8];  // ADC raw data (length = 18 bit)
+float    gyro[2]; // gyro angle velocity integral
 
 /* USER CODE END PV */
 
@@ -86,11 +91,14 @@ static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 void mainTask(void const * argument);
-void ADCTask(void const * argument);
+void adcTask(void const * argument);
+void sensorTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+static void prepareSensorData(void);
+static void prepareADCData(void);
+static void sendData2PC(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -141,9 +149,17 @@ int main(void)
   /* USER CODE END RTOS_MUTEX */
 
   /* Create the semaphores(s) */
-  /* definition and creation of triggerADCSem */
-  osSemaphoreDef(triggerADCSem);
-  triggerADCSemHandle = osSemaphoreCreate(osSemaphore(triggerADCSem), 1);
+  /* definition and creation of AdcConvertStartSem */
+  osSemaphoreDef(AdcConvertStartSem);
+  AdcConvertStartSemHandle = osSemaphoreCreate(osSemaphore(AdcConvertStartSem), 1);
+
+  /* definition and creation of AdcConvertCompleteSem */
+  osSemaphoreDef(AdcConvertCompleteSem);
+  AdcConvertCompleteSemHandle = osSemaphoreCreate(osSemaphore(AdcConvertCompleteSem), 1);
+
+  /* definition and creation of EncoderArriveSem */
+  osSemaphoreDef(EncoderArriveSem);
+  EncoderArriveSemHandle = osSemaphoreCreate(osSemaphore(EncoderArriveSem), 1);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
@@ -159,8 +175,12 @@ int main(void)
   MAIN_TASKHandle = osThreadCreate(osThread(MAIN_TASK), NULL);
 
   /* definition and creation of ADC_TASK */
-  osThreadDef(ADC_TASK, ADCTask, osPriorityBelowNormal, 0, 128);
+  osThreadDef(ADC_TASK, adcTask, osPriorityBelowNormal, 0, 128);
   ADC_TASKHandle = osThreadCreate(osThread(ADC_TASK), NULL);
+
+  /* definition and creation of SENSOR_TASK */
+  osThreadDef(SENSOR_TASK, sensorTask, osPriorityLow, 0, 128);
+  SENSOR_TASKHandle = osThreadCreate(osThread(SENSOR_TASK), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add tasks, ... */
@@ -314,7 +334,7 @@ static void MX_USART3_UART_Init(void)
 {
 
   huart3.Instance = USART3;
-  huart3.Init.BaudRate = 115200;
+  huart3.Init.BaudRate = 38400;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;
@@ -333,7 +353,7 @@ static void MX_USART6_UART_Init(void)
 {
 
   huart6.Instance = USART6;
-  huart6.Init.BaudRate = 115200;
+  huart6.Init.BaudRate = 38400;
   huart6.Init.WordLength = UART_WORDLENGTH_8B;
   huart6.Init.StopBits = UART_STOPBITS_1;
   huart6.Init.Parity = UART_PARITY_NONE;
@@ -428,9 +448,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
   GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
   GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
   LL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /**/
+  GPIO_InitStruct.Pin = IN_DI_A_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
+  LL_GPIO_Init(IN_DI_A_GPIO_Port, &GPIO_InitStruct);
+
+  /**/
+  GPIO_InitStruct.Pin = IN_DI_B_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
+  LL_GPIO_Init(IN_DI_B_GPIO_Port, &GPIO_InitStruct);
 
   /**/
   GPIO_InitStruct.Pin = NST2_Pin;
@@ -453,6 +485,23 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void prepareSensorData(void)
+{
+}
+
+static void prepareADCData(void)
+{
+}
+
+static void sendData2PC(void)
+{
+  /* Here, all the information to be output needs to be concentrated in one 
+     PRINTF2 statement for output, so that the highest efficiency can be obtained. 
+     Because PRINTF2 is sent by DMA, and the buffer is 200 bytes.
+   */
+  PRINTF2("DATA:%d,%d,%d,%d,%d,%d,%d,%d\r\n", adc[0], adc[1], 
+          adc[2], adc[3], adc[4], adc[5], adc[6], adc[7]);
+}
 
 /* USER CODE END 4 */
 
@@ -461,28 +510,48 @@ void mainTask(void const * argument)
 {
 
   /* USER CODE BEGIN 5 */
+  
   assert_param(1 == 1); // for test assert
   PRINTF("Welcome to STM32F407VET6 Core Board!\r\n");
   
-  /* Infinite loop */
+  startGyro();
+  
   while(1) {
-    osSemaphoreRelease(triggerADCSemHandle);
+    //osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-    osDelay(1000);
+    osSemaphoreRelease(AdcConvertStartSemHandle);
+    prepareSensorData();
+    osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
+    prepareADCData();
+    sendData2PC();
+    osDelay(1000); // for test cyclic output
   }
+  
   /* USER CODE END 5 */ 
 }
 
-/* ADCTask function */
-__weak void ADCTask(void const * argument)
+/* adcTask function */
+__weak void adcTask(void const * argument)
 {
-  /* USER CODE BEGIN ADCTask */
+  /* USER CODE BEGIN adcTask */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END ADCTask */
+  /* USER CODE END adcTask */
+}
+
+/* sensorTask function */
+__weak void sensorTask(void const * argument)
+{
+  /* USER CODE BEGIN sensorTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END sensorTask */
 }
 
 /**
