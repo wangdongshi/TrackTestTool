@@ -868,12 +868,12 @@ ARM Macro Assembler    Page 14
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
 erwork --depend=.\tracktesttool\startup_stm32f407xx.d -o.\tracktesttool\startup
-_stm32f407xx.o -I..\\Inc -ID:\工作室\铁路巡检用小车\TrackTestTool\MDK-ARM\RTE -
-IC:\Keil\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include -IC:\Keil\ARM\PACK\Keil\ST
-M32F4xx_DFP\2.7.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --predefine="__MICR
-OLIB SETA 1" --predefine="__UVISION_VERSION SETA 518" --predefine="_RTE_ SETA 1
-" --predefine="STM32F407xx SETA 1" --list=startup_stm32f407xx.lst startup_stm32
-f407xx.s
+_stm32f407xx.o -I..\\Inc -ID:\工作室\铁路巡检用小车\Project\TrackTestTool\MDK-A
+RM\RTE -IC:\Keil\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include -IC:\Keil\ARM\PACK
+\Keil\STM32F4xx_DFP\2.7.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include --predefine
+="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 518" --predefine="_RTE
+_ SETA 1" --predefine="STM32F407xx SETA 1" --list=startup_stm32f407xx.lst start
+up_stm32f407xx.s
 
 
 
