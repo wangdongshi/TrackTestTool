@@ -55,11 +55,14 @@
 #include "debug.h"
 #include "adc7608.h"
 #include "gyro97B.h"
+#include "encoder.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
 DMA_HandleTypeDef hdma_spi1_rx;
+
+TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -90,6 +93,7 @@ static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USART6_UART_Init(void);
+static void MX_TIM1_Init(void);
 void mainTask(void const * argument);
 void adcTask(void const * argument);
 void sensorTask(void const * argument);
@@ -140,6 +144,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -291,6 +296,42 @@ static void MX_SPI1_Init(void)
 
 }
 
+/* TIM1 init function */
+static void MX_TIM1_Init(void)
+{
+
+  TIM_Encoder_InitTypeDef sConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 0;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 0x0FFF;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
+  sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC1Filter = 0;
+  sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
+  sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
+  sConfig.IC2Filter = 0;
+  if (HAL_TIM_Encoder_Init(&htim1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /* USART1 init function */
 static void MX_USART1_UART_Init(void)
 {
@@ -373,8 +414,8 @@ static void MX_USART6_UART_Init(void)
 static void MX_DMA_Init(void) 
 {
   /* DMA controller clock enable */
-  __HAL_RCC_DMA2_CLK_ENABLE();
   __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
   /* DMA1_Stream6_IRQn interrupt configuration */
@@ -388,8 +429,6 @@ static void MX_DMA_Init(void)
 
 /** Configure pins
      PE5   ------> S_TIM9_CH1
-     PE9   ------> S_TIM1_CH1
-     PE11   ------> S_TIM1_CH2
      PD12   ------> S_TIM4_CH1
      PB4   ------> S_TIM3_CH1
 */
@@ -442,15 +481,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
   LL_GPIO_Init(ADC_BUSY_GPIO_Port, &GPIO_InitStruct);
-
-  /**/
-  GPIO_InitStruct.Pin = ENCODER_A_Pin|ENCODER_B_Pin;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-  GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
-  LL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /**/
   GPIO_InitStruct.Pin = IN_DI_A_Pin;
@@ -515,16 +545,17 @@ void mainTask(void const * argument)
   PRINTF("Welcome to STM32F407VET6 Core Board!\r\n");
   
   startGyro();
+  startEncoder();
   
   while(1) {
-    //osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
+    osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
     prepareADCData();
     sendData2PC();
-    osDelay(1000); // for test cyclic output
+    //osDelay(1000); // for test cyclic output
   }
   
   /* USER CODE END 5 */ 
@@ -571,7 +602,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+  if (htim->Instance == TIM1) {
+    encoderCallback();
+  }
   /* USER CODE END Callback 1 */
 }
 

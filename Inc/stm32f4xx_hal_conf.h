@@ -77,7 +77,7 @@
 #define HAL_SPI_MODULE_ENABLED
 #define HAL_TIM_MODULE_ENABLED
 #define HAL_UART_MODULE_ENABLED
-#define HAL_USART_MODULE_ENABLED
+/* #define HAL_USART_MODULE_ENABLED   */
 /* #define HAL_IRDA_MODULE_ENABLED   */
 /* #define HAL_SMARTCARD_MODULE_ENABLED   */
 /* #define HAL_WWDG_MODULE_ENABLED   */
@@ -431,7 +431,6 @@
 #if 0 // Delete by WangYu 2023/7/5
 
 #ifdef  USE_FULL_ASSERT
-
 /**
   * @brief  The assert_param macro is used for function's parameters check.
   * @param  expr: If expr is false, it calls assert_failed function

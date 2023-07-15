@@ -2,15 +2,16 @@
  * Copyright (c) 2023 - 2035 by WangYu
  * All rights reserved
  *
- * Filename : ad7608.h
+ * Filename : encoder.h
  * Project  : Track Test Tool
- * Date     : 2023/7/3
+ * Date     : 2023/7/14
  * Author   : WangYu
  *
  **********************************************************************/
-#ifndef __ADC7608_H__
-#define __ADC7608_H__
+#ifndef __ENCODER_H__
+#define __ENCODER_H__
 
-void ADC_Task(void const * argument);
+void startEncoder(void);
+void encoderCallback(void);
 
-#endif // __ADC7608_H__
+#endif // __ENCODER_H__

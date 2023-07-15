@@ -332,7 +332,7 @@
               <MiscControls></MiscControls>
               <Define>USE_FULL_ASSERT,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;                     ../Drivers/STM32F4xx_HAL_Driver/Inc;                     ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                     ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                     ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                     ../Middlewares/Third_Party/FreeRTOS/Source/include;                     ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                     ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;                          ../Drivers/STM32F4xx_HAL_Driver/Inc;                          ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                          ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                          ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                          ../Middlewares/Third_Party/FreeRTOS/Source/include;                          ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                          ../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -446,6 +446,11 @@
               <FileName>gyro97B.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\gyro97B.c</FilePath>
+            </File>
+            <File>
+              <FileName>encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\encoder.c</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>

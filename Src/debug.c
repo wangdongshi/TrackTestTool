@@ -30,7 +30,7 @@ int fputc(int ch, FILE *stream)
 {
   assert_param(ch <= 0x1FF);
   
-  while((USART1->SR & USART_FLAG_TXE) != USART_FLAG_TXE);
+  while((USART1->SR & UART_FLAG_TXE) != UART_FLAG_TXE);
   USART1->DR = (ch & (uint16_t)0x01FF);
   
 	return ((uint16_t)(ch));

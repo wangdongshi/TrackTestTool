@@ -8,4 +8,9 @@
  * Author   : WangYu
  *
  **********************************************************************/
+#ifndef __GYRO97B_H__
+#define __GYRO97B_H__
+
 void startGyro(void);
+
+#endif // __GYRO97B_H__
