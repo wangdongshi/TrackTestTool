@@ -201,18 +201,18 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>30</LineNumber>
+          <LineNumber>52</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134238278</Address>
+          <Address>134229876</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\宸ヤ綔瀹?閾佽矾宸℃鐢ㄥ皬杞?Project\TrackTestTool\Src\encoder.c</Filename>
+          <Filename>D:\宸ヤ綔瀹?閾佽矾宸℃鐢ㄥ皬杞?Project\TrackTestTool\Src\gyro97B.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\TrackTest\../Src/encoder.c\30</Expression>
+          <Expression>\\TrackTest\../Src/gyro97B.c\52</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -220,6 +220,16 @@
           <count>0</count>
           <WinNumber>1</WinNumber>
           <ItemText>GPIOB</ItemText>
+        </Ww>
+        <Ww>
+          <count>1</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>gyro2</ItemText>
+        </Ww>
+        <Ww>
+          <count>2</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>gyro1</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>

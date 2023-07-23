@@ -34,11 +34,16 @@ static uint8_t gyro2[8]; // gyro2 angle velocity raw data (significant 24 bit)
 /* Formal function definitions -----------------------------------------------*/
 void startGyro(void)
 {
+  HAL_StatusTypeDef status;
+  
   gyro[0] = 0.0f;
   gyro[1] = 0.0f;
   
-  HAL_UART_Receive_DMA(&huart3, gyro1, 8);
-  HAL_UART_Receive_DMA(&huart6, gyro2, 8);
+  status = HAL_UART_Receive_DMA(&huart3, gyro1, 8);
+  assert_param(status == HAL_OK);
+  
+  status = HAL_UART_Receive_DMA(&huart6, gyro2, 8);
+  assert_param(status == HAL_OK);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)

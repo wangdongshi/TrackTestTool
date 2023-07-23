@@ -53,7 +53,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "debug.h"
-#include "adc7608.h"
+#include "ad7608.h"
 #include "gyro97B.h"
 #include "encoder.h"
 /* USER CODE END Includes */
@@ -69,6 +69,8 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 DMA_HandleTypeDef hdma_usart2_tx;
+DMA_HandleTypeDef hdma_usart3_rx;
+DMA_HandleTypeDef hdma_usart6_rx;
 
 osThreadId MAIN_TASKHandle;
 osThreadId ADC_TASKHandle;
@@ -79,8 +81,8 @@ osSemaphoreId EncoderArriveSemHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint32_t adc[8];  // ADC raw data (length = 18 bit)
-float    gyro[2]; // gyro angle velocity integral
+uint32_t adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
+float    gyro[2];               // gyro angle velocity integral
 
 /* USER CODE END PV */
 
@@ -418,12 +420,18 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
   /* DMA1_Stream6_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  /* DMA2_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
 
 }
 
@@ -548,14 +556,14 @@ void mainTask(void const * argument)
   startEncoder();
   
   while(1) {
-    osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
+    //osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
     prepareADCData();
     sendData2PC();
-    //osDelay(1000); // for test cyclic output
+    osDelay(500);
   }
   
   /* USER CODE END 5 */ 
