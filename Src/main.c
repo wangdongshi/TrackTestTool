@@ -80,8 +80,12 @@ osSemaphoreId AdcConvertCompleteSemHandle;
 osSemaphoreId EncoderArriveSemHandle;
 
 /* USER CODE BEGIN PV */
+/* Private macro -------------------------------------------------------------*/
+#define VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
+
 /* Private variables ---------------------------------------------------------*/
-uint32_t adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
+int32_t  adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
+float    vol[AD7608_CH_NUMBER]; // voltage data from ADC raw data
 float    gyro[2];               // gyro angle velocity integral
 
 /* USER CODE END PV */
@@ -529,6 +533,9 @@ static void prepareSensorData(void)
 
 static void prepareADCData(void)
 {
+  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
+    vol[i] = (float)((adc[i] << 14) >> 14) * VOLTAGE_TRANSFER_FACTOR;
+  }
 }
 
 static void sendData2PC(void)
@@ -537,8 +544,18 @@ static void sendData2PC(void)
      PRINTF2 statement for output, so that the highest efficiency can be obtained. 
      Because PRINTF2 is sent by DMA, and the buffer is 200 bytes.
    */
-  PRINTF2("DATA:%d,%d,%d,%d,%d,%d,%d,%d\r\n", adc[0], adc[1], 
-          adc[2], adc[3], adc[4], adc[5], adc[6], adc[7]);
+  PRINTF2("DATA:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f\r\n",
+          vol[0],
+          vol[1],
+          vol[2],
+          vol[3],
+          vol[4],
+          vol[5],
+          vol[6],
+          vol[7],
+          gyro[0],
+          gyro[1]
+  );
 }
 
 /* USER CODE END 4 */
@@ -556,14 +573,14 @@ void mainTask(void const * argument)
   startEncoder();
   
   while(1) {
-    //osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
+    osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
     prepareADCData();
     sendData2PC();
-    osDelay(500);
+    //osDelay(500);
   }
   
   /* USER CODE END 5 */ 

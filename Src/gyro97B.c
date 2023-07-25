@@ -48,18 +48,25 @@ void startGyro(void)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+  int32_t gyro_24bit;
+  float angular_velocity;
+  
   if (huart == &huart3) {
     if (gyro1[0] != GYRO_FIRST_BYTE) return;
-    float angular_velocity1 = (gyro1[2] << 16) + (gyro1[3] << 8) + gyro1[1];
-    angular_velocity1 /= GYRO_SCALE_FACTOR1;
-    gyro[0] += angular_velocity1 / GYRO_UPDATE_FREQUENCY;
-    if (gyro[0] > CIRCULAR_ANGLE_DEGREE) gyro[0] -= CIRCULAR_ANGLE_DEGREE;
+    gyro_24bit = (((int32_t)gyro1[2]) << 16) + (((int32_t)gyro1[3]) << 8) + (int32_t)gyro1[1];
+    gyro_24bit = (gyro_24bit << 8) >> 8;
+    angular_velocity = (float)gyro_24bit / GYRO_SCALE_FACTOR1;
+    //gyro[0] += angular_velocity / GYRO_UPDATE_FREQUENCY;
+    //if (gyro[0] > CIRCULAR_ANGLE_DEGREE) gyro[0] -= CIRCULAR_ANGLE_DEGREE;
+    gyro[0] = angular_velocity;
   }
   else if (huart == &huart6) {
     if (gyro2[0] != GYRO_FIRST_BYTE) return;
-    float angular_velocity2 = (gyro2[2] << 16) + (gyro2[3] << 8) + gyro2[1];
-    angular_velocity2 /= GYRO_SCALE_FACTOR2;
-    gyro[1] += angular_velocity2 / GYRO_UPDATE_FREQUENCY;
-    if (gyro[1] > CIRCULAR_ANGLE_DEGREE) gyro[1] -= CIRCULAR_ANGLE_DEGREE;
+    gyro_24bit = (((int32_t)gyro2[2]) << 16) + (((int32_t)gyro2[3]) << 8) + (int32_t)gyro2[1];
+    gyro_24bit = (gyro_24bit << 8) >> 8;
+    angular_velocity = (float)gyro_24bit / GYRO_SCALE_FACTOR2;
+    //gyro[1] += angular_velocity / GYRO_UPDATE_FREQUENCY;
+    //if (gyro[1] > CIRCULAR_ANGLE_DEGREE) gyro[1] -= CIRCULAR_ANGLE_DEGREE;
+    gyro[1] = angular_velocity;
   }
 }
