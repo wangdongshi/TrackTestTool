@@ -10,12 +10,13 @@
  **********************************************************************/
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include "stm32f4xx_hal.h"
 
 extern UART_HandleTypeDef huart2;
 static char buffer[200];
 
-void PRINTF2(const char *format,...) // UART2 for RS485/RS232/USB/Ethernet
+void PRINTF2(const char *format, ...) // UART2 for RS485/RS232/USB/Ethernet
 {
   unsigned short length;
   va_list args;
@@ -24,6 +25,14 @@ void PRINTF2(const char *format,...) // UART2 for RS485/RS232/USB/Ethernet
   va_end(args);
   
   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)buffer, length);
+}
+
+void TRACEFLOAT(float* input, unsigned short length) // UART2 for VOFA+
+{
+  memcpy((void*)buffer, (void*)input, (size_t)(length * sizeof(float)));
+  *((uint32_t*)buffer + length) = 0x7F800000;
+  
+  HAL_UART_Transmit_DMA(&huart2, (uint8_t*)buffer, (length + 1) * sizeof(float));
 }
 
 int fputc(int ch, FILE *stream)

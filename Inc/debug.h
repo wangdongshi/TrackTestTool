@@ -25,6 +25,7 @@ void PRINTF(const char *format, ...);
 
 #endif
 
-void PRINTF2(const char *format,...);
+void PRINTF2(const char *format, ...);
+void TRACEFLOAT(float* input, unsigned short length);
 
 #endif // __DEBUG_H__

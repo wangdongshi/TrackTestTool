@@ -35,6 +35,7 @@ static uint32_t counter = (uint32_t)(TESTER_TRIGGER_DISTANCE *
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
 extern osSemaphoreId EncoderArriveSemHandle;
+extern float mileage;
 
 /* Private function prototypes -----------------------------------------------*/
 static void initEncoder(void);
@@ -52,6 +53,8 @@ static void initEncoder(void)
 
 void startEncoder(void)
 {
+  mileage = 0.0f;
+  
   initEncoder();
   
   __HAL_TIM_CLEAR_IT(&htim1, TIM_IT_UPDATE);
@@ -63,6 +66,8 @@ void encoderCallback(void)
 {
   currentDirection = (__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim1)) ? BACKWARD : FORWARD;
   if (currentDirection == previousDirection) {
+    if (currentDirection == FORWARD) mileage += (TESTER_TRIGGER_DISTANCE / 1000.f);
+    else mileage -= (TESTER_TRIGGER_DISTANCE / 1000.f);
     osSemaphoreRelease(EncoderArriveSemHandle);
   }
   previousDirection = currentDirection;

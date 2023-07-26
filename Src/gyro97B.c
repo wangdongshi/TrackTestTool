@@ -14,8 +14,8 @@
 #include "stm32f4xx_hal.h"
 
 /* Private macro -------------------------------------------------------------*/
-#define GYRO_SCALE_FACTOR1      50000.0f  // Unit : degree/s
-#define GYRO_SCALE_FACTOR2      50000.0f  // Unit : degree/s
+#define GYRO_SCALE_FACTOR1      89931.8f  // Unit : degree/s
+#define GYRO_SCALE_FACTOR2      89942.9f  // Unit : degree/s
 #define GYRO_UPDATE_FREQUENCY   300.0f    // Unit : Hz
 #define GYRO_FIRST_BYTE         0xDD
 #define CIRCULAR_ANGLE_DEGREE   360.0f    // Unit : degree

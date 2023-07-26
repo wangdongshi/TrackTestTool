@@ -87,6 +87,8 @@ osSemaphoreId EncoderArriveSemHandle;
 int32_t  adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
 float    vol[AD7608_CH_NUMBER]; // voltage data from ADC raw data
 float    gyro[2];               // gyro angle velocity integral
+float    mileage;
+uint32_t number;
 
 /* USER CODE END PV */
 
@@ -182,7 +184,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of MAIN_TASK */
-  osThreadDef(MAIN_TASK, mainTask, osPriorityNormal, 0, 128);
+  osThreadDef(MAIN_TASK, mainTask, osPriorityNormal, 0, 512);
   MAIN_TASKHandle = osThreadCreate(osThread(MAIN_TASK), NULL);
 
   /* definition and creation of ADC_TASK */
@@ -527,6 +529,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void initData(void)
+{
+  number  = 0;
+}
+
 static void prepareSensorData(void)
 {
 }
@@ -544,7 +551,13 @@ static void sendData2PC(void)
      PRINTF2 statement for output, so that the highest efficiency can be obtained. 
      Because PRINTF2 is sent by DMA, and the buffer is 200 bytes.
    */
-  PRINTF2("DATA:%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f\r\n",
+  
+#ifdef DEBUG
+  
+  // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
+  PRINTF2("DATA:%d,%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f\r\n",
+          number++,
+          mileage,
           vol[0],
           vol[1],
           vol[2],
@@ -556,6 +569,21 @@ static void sendData2PC(void)
           gyro[0],
           gyro[1]
   );
+  
+#else
+  
+  // In normal mode, the data can be confirmed by VOFA+ JustFloat engine.
+  float buffer[11] = {0.0f};
+  unsigned short length = sizeof(buffer) / sizeof(float);
+    
+  buffer[0]  = mileage;
+  for (uint8_t i = 0; i < 8; i++) buffer[i + 1] = vol[i];
+  buffer[9]  = gyro[0];
+  buffer[10] = gyro[1];
+  
+  TRACEFLOAT(buffer, length);
+
+#endif
 }
 
 /* USER CODE END 4 */
@@ -569,6 +597,7 @@ void mainTask(void const * argument)
   assert_param(1 == 1); // for test assert
   PRINTF("Welcome to STM32F407VET6 Core Board!\r\n");
   
+  initData();
   startGyro();
   startEncoder();
   
