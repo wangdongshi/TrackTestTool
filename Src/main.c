@@ -83,14 +83,14 @@ osSemaphoreId EncoderArriveSemHandle;
 
 /* USER CODE BEGIN PV */
 /* Private macro -------------------------------------------------------------*/
+#define JUSTFLOAT
 #define VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
 
 /* Private structs -----------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-int32_t          adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
 TRACK_MEAS_ITEM  meas = {0.0f};
-uint32_t         number;
+int32_t          adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
 
 /* USER CODE END PV */
 
@@ -533,11 +533,12 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 static void initData(void)
 {
-  number  = 0;
+  meas.sequence = 0;
 }
 
 static void prepareSensorData(void)
 {
+  meas.sequence++;
 }
 
 static void prepareADCData(void)
@@ -565,11 +566,17 @@ static void sendData2PC(void)
      Because PRINTF2 is sent by DMA, and the buffer is 200 bytes.
    */
   
-#ifdef DEBUG
+#ifdef JUSTFLOAT
+    
+  // In normal mode, the data can be confirmed by VOFA+ JustFloat engine.
+  unsigned short length = sizeof(meas) / sizeof(float);
+  
+  TRACEFLOAT((float*)&meas, length);
+
+#else
   
   // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-  PRINTF2("DATA:%d,%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f\r\n",
-          number++,
+  PRINTF2("DATA:%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f,%ld\r\n",
           meas.mileage,
           meas.height,
           meas.distance,
@@ -579,15 +586,9 @@ static void sendData2PC(void)
           meas.pitch,
           meas.battery,
           meas.omega1,
-          meas.omega2
+          meas.omega2,
+          meas.sequence
   );
-  
-#else
-  
-  // In normal mode, the data can be confirmed by VOFA+ JustFloat engine.
-  unsigned short length = sizeof(meas) / sizeof(float);
-  
-  TRACEFLOAT((float*)&meas, length);
 
 #endif
 }

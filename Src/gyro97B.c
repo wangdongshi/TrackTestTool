@@ -29,6 +29,8 @@ extern TRACK_MEAS_ITEM meas;
 static uint8_t gyro1[8]; // gyro1 angle velocity raw data (significant 24 bit)
 static uint8_t gyro2[8]; // gyro2 angle velocity raw data (significant 24 bit)
 
+float gyro_zero_offset[2] = {0.0f, 0.0f};
+
 /* Private function prototypes -----------------------------------------------*/
 
 /* Formal function definitions -----------------------------------------------*/
@@ -36,10 +38,8 @@ void startGyro(void)
 {
   HAL_StatusTypeDef status;
   
-  meas.omega1 = 0.0f;
-  meas.omega2 = 0.0f;
-  meas.yaw    = 0.0f;
-  meas.pitch  = 0.0f;
+  meas.omega1 = 0.0f - gyro_zero_offset[0];
+  meas.omega2 = 0.0f - gyro_zero_offset[1];
   
   status = HAL_UART_Receive_DMA(&huart3, gyro1, 8);
   assert_param(status == HAL_OK);
@@ -56,15 +56,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (gyro1[0] != GYRO_FIRST_BYTE) return;
     gyro_24bit = (((int32_t)gyro1[2]) << 16) + (((int32_t)gyro1[3]) << 8) + (int32_t)gyro1[1];
     gyro_24bit = (gyro_24bit << 8) >> 8;
-    meas.omega1 = (float)gyro_24bit / GYRO_SCALE_FACTOR1;
-    meas.yaw += meas.omega1 / GYRO_UPDATE_FREQUENCY; 
+    meas.omega1 = (float)gyro_24bit / GYRO_SCALE_FACTOR1 - gyro_zero_offset[0];
+    meas.yaw += meas.omega1 / GYRO_UPDATE_FREQUENCY;
     if (meas.yaw > CIRCULAR_ANGLE_DEGREE) meas.yaw -= CIRCULAR_ANGLE_DEGREE;
   }
   else if (huart == &huart6) {
     if (gyro2[0] != GYRO_FIRST_BYTE) return;
     gyro_24bit = (((int32_t)gyro2[2]) << 16) + (((int32_t)gyro2[3]) << 8) + (int32_t)gyro2[1];
     gyro_24bit = (gyro_24bit << 8) >> 8;
-    meas.omega2 = (float)gyro_24bit / GYRO_SCALE_FACTOR2;
+    meas.omega2 = (float)gyro_24bit / GYRO_SCALE_FACTOR2 - gyro_zero_offset[1] ;
     meas.pitch += meas.omega2 / GYRO_UPDATE_FREQUENCY;
     if (meas.pitch > CIRCULAR_ANGLE_DEGREE) meas.pitch -= CIRCULAR_ANGLE_DEGREE;
   }
