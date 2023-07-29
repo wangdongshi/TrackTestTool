@@ -93,7 +93,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
   adc[6] = ((buff[13] & 0x0F) << 14) + (buff[14] << 6) + (buff[15] >> 2);
   adc[7] = ((buff[15] & 0x03) << 16) + (buff[16] << 8) + (buff[17] >> 0);
   
-#ifdef DEBUG
+#if 0
   // Print debug info (raw DMA data)
   PRINTF("DMA_BUF[18] = 0x");
   for (uint8_t i = 0; i < 18; i++) PRINTF("%X", buff[i]);

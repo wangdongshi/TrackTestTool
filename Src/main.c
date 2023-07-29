@@ -52,7 +52,9 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN Includes */
+#include <math.h>
 #include "debug.h"
+#include "calibrator.h"
 #include "ad7608.h"
 #include "gyro97B.h"
 #include "encoder.h"
@@ -83,12 +85,12 @@ osSemaphoreId EncoderArriveSemHandle;
 /* Private macro -------------------------------------------------------------*/
 #define VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
 
+/* Private structs -----------------------------------------------------------*/
+
 /* Private variables ---------------------------------------------------------*/
-int32_t  adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
-float    vol[AD7608_CH_NUMBER]; // voltage data from ADC raw data
-float    gyro[2];               // gyro angle velocity integral
-float    mileage;
-uint32_t number;
+int32_t          adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
+TRACK_MEAS_ITEM  meas = {0.0f};
+uint32_t         number;
 
 /* USER CODE END PV */
 
@@ -540,9 +542,20 @@ static void prepareSensorData(void)
 
 static void prepareADCData(void)
 {
+  float vol[AD7608_CH_NUMBER];
+  
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
     vol[i] = (float)((adc[i] << 14) >> 14) * VOLTAGE_TRANSFER_FACTOR;
   }
+  
+  meas.compensation = vol[TRACK_DIST_COMPENSATION];
+  meas.height       = vol[TRACK_HEIGHT];
+  meas.distance     = vol[TRACK_DISTANCE];
+  meas.battery      = vol[TRACK_BATTERY_VOLTAGE];
+  
+  // Angle = arcsin((E0-Eb)/SF)-Theta
+  meas.roll = (vol[TRACK_DIP_0] - vol[TRACK_DIP_A1]) / TILT_SCALE_FACTOR;
+  meas.roll = asin(meas.roll) - TILT_AXIS_MISALIGNMENT_ANGLE;
 }
 
 static void sendData2PC(void)
@@ -555,33 +568,26 @@ static void sendData2PC(void)
 #ifdef DEBUG
   
   // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-  PRINTF2("DATA:%d,%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f\r\n",
+  PRINTF2("DATA:%d,%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f\r\n",
           number++,
-          mileage,
-          vol[0],
-          vol[1],
-          vol[2],
-          vol[3],
-          vol[4],
-          vol[5],
-          vol[6],
-          vol[7],
-          gyro[0],
-          gyro[1]
+          meas.mileage,
+          meas.height,
+          meas.distance,
+          meas.compensation,
+          meas.roll,
+          meas.yaw,
+          meas.pitch,
+          meas.battery,
+          meas.omega1,
+          meas.omega2
   );
   
 #else
   
   // In normal mode, the data can be confirmed by VOFA+ JustFloat engine.
-  float buffer[11] = {0.0f};
-  unsigned short length = sizeof(buffer) / sizeof(float);
-    
-  buffer[0]  = mileage;
-  for (uint8_t i = 0; i < 8; i++) buffer[i + 1] = vol[i];
-  buffer[9]  = gyro[0];
-  buffer[10] = gyro[1];
+  unsigned short length = sizeof(meas) / sizeof(float);
   
-  TRACEFLOAT(buffer, length);
+  TRACEFLOAT((float*)&meas, length);
 
 #endif
 }
@@ -602,14 +608,14 @@ void mainTask(void const * argument)
   startEncoder();
   
   while(1) {
-    osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
+    //osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
     prepareADCData();
     sendData2PC();
-    //osDelay(500);
+    osDelay(500);
   }
   
   /* USER CODE END 5 */ 

@@ -13,10 +13,11 @@
 #include "debug.h"
 #include "cmsis_os.h"
 #include "stm32f4xx_hal.h"
+#include "main.h"
+#include "calibrator.h"
 
 /* Private macro -------------------------------------------------------------*/
 #define TESTER_TRIGGER_DISTANCE   125.0f  // Unit : mm
-#define MILEAGE_WHEEL_DIAMETER    63.66f  // Unit : mm
 #define ENCODER_PULSE_RATE        200     // Unit : pulse/r (Omron E6B2)
 #define ENCODER_MULTI_FREQ        4       // A & B signal, rising & falling edge
 #define PI                        3.1415926f
@@ -35,7 +36,7 @@ static uint32_t counter = (uint32_t)(TESTER_TRIGGER_DISTANCE *
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
 extern osSemaphoreId EncoderArriveSemHandle;
-extern float mileage;
+extern TRACK_MEAS_ITEM meas;
 
 /* Private function prototypes -----------------------------------------------*/
 static void initEncoder(void);
@@ -53,7 +54,7 @@ static void initEncoder(void)
 
 void startEncoder(void)
 {
-  mileage = 0.0f;
+  meas.mileage = 0.0f;
   
   initEncoder();
   
@@ -66,8 +67,8 @@ void encoderCallback(void)
 {
   currentDirection = (__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim1)) ? BACKWARD : FORWARD;
   if (currentDirection == previousDirection) {
-    if (currentDirection == FORWARD) mileage += (TESTER_TRIGGER_DISTANCE / 1000.f);
-    else mileage -= (TESTER_TRIGGER_DISTANCE / 1000.f);
+    if (currentDirection == FORWARD) meas.mileage += (TESTER_TRIGGER_DISTANCE / 1000.f);
+    else meas.mileage -= (TESTER_TRIGGER_DISTANCE / 1000.f);
     osSemaphoreRelease(EncoderArriveSemHandle);
   }
   previousDirection = currentDirection;

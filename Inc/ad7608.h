@@ -13,6 +13,17 @@
 
 #define AD7608_CH_NUMBER  8
 
+typedef enum {
+  TRACK_DIST_COMPENSATION = 0,
+  TRACK_HEIGHT,
+  TRACK_DIP_0,
+  TRACK_DIP_A1,
+  TRACK_DISTANCE,
+  TRACK_RESERVE,
+  TRACK_BATTERY_VOLTAGE,
+  NONE
+} ADC_CH;
+
 void ADC_Task(void const * argument);
 
 #endif // __ADC7608_H__

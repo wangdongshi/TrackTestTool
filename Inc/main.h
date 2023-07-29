@@ -125,6 +125,19 @@
 
 /* USER CODE BEGIN Private defines */
 
+typedef struct _meas {
+  float mileage;  // measure by encoder
+  float height;
+  float distance;
+  float compensation;
+  float roll;     // measure by dip sensor
+  float yaw;      // integral by gyro1
+  float pitch;    // integral by gyro2
+  float battery;
+  float omega1;   // measure by gyro1
+  float omega2;   // measure by gyro2
+} TRACK_MEAS_ITEM;
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
