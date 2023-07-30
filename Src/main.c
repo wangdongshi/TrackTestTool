@@ -110,9 +110,10 @@ void sensorTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-static void prepareSensorData(void);
-static void prepareADCData(void);
-static void sendData2PC(void);
+static void  prepareSensorData(void);
+static void  prepareADCData(void);
+static float calibrateADCData(ADC_CAL item, float raw);
+static void  sendData2PC(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -545,6 +546,7 @@ static void prepareADCData(void)
 {
   float vol[AD7608_CH_NUMBER];
   
+  // ADC data --> voltage (-5V to +5V)
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
     vol[i] = (float)((adc[i] << 14) >> 14) * VOLTAGE_TRANSFER_FACTOR;
   }
@@ -554,9 +556,41 @@ static void prepareADCData(void)
   meas.distance     = vol[TRACK_DISTANCE];
   meas.battery      = vol[TRACK_BATTERY_VOLTAGE];
   
+  // calculate dip angle
   // Angle = arcsin((E0-Eb)/SF)-Theta
   meas.roll = (vol[TRACK_DIP_0] - vol[TRACK_DIP_A1]) / TILT_SCALE_FACTOR;
   meas.roll = asin(meas.roll) - TILT_AXIS_MISALIGNMENT_ANGLE;
+  
+#if 0
+  // calibrate
+  meas.compensation = calibrateADCData(CAL_DIST_COMPENSATION, meas.compensation);
+  meas.height       = calibrateADCData(CAL_HEIGHT, meas.height);
+  meas.distance     = calibrateADCData(CAL_DISTANCE, meas.distance);
+  meas.roll         = calibrateADCData(CAL_DIP, meas.roll);
+#endif
+}
+
+static float calibrateADCData(ADC_CAL item, float raw)
+{
+  assert_param(item < CAL_ITEMS);
+  
+  uint8_t index;
+  float alpha, result;
+  
+  for (uint8_t index = 0; index < CAL_POINTS; index++) {
+    if (isnan(tbl[item][index].meas)) return INFINITY; // overflow
+    if (tbl[item][index].meas == raw) return tbl[item][index].real;
+    if (tbl[item][index].meas > raw) break;
+  }
+  
+  if (index == CAL_POINTS) return INFINITY; // overflow
+  
+  alpha = (tbl[item][index].meas - raw) /
+          (tbl[item][index].meas - tbl[item][index - 1].meas);
+  result = tbl[item][index].real - alpha * 
+          (tbl[item][index].real - tbl[item][index - 1].real);
+  
+  return result;
 }
 
 static void sendData2PC(void)
