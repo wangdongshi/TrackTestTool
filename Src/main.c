@@ -54,6 +54,7 @@
 /* USER CODE BEGIN Includes */
 #include <math.h>
 #include "debug.h"
+#include "comm.h"
 #include "calibrator.h"
 #include "ad7608.h"
 #include "gyro97B.h"
@@ -71,12 +72,15 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 DMA_HandleTypeDef hdma_usart2_tx;
+DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart6_rx;
 
 osThreadId MAIN_TASKHandle;
 osThreadId ADC_TASKHandle;
 osThreadId SENSOR_TASKHandle;
+osThreadId COMM_TASKHandle;
+osMessageQId UserCommandQueueHandle;
 osSemaphoreId AdcConvertStartSemHandle;
 osSemaphoreId AdcConvertCompleteSemHandle;
 osSemaphoreId EncoderArriveSemHandle;
@@ -107,6 +111,7 @@ static void MX_TIM1_Init(void);
 void mainTask(void const * argument);
 void adcTask(void const * argument);
 void sensorTask(void const * argument);
+void commTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -117,7 +122,7 @@ static void  sendData2PC(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-
+extern uint8_t mode;
 /* USER CODE END 0 */
 
 /**
@@ -198,9 +203,19 @@ int main(void)
   osThreadDef(SENSOR_TASK, sensorTask, osPriorityLow, 0, 128);
   SENSOR_TASKHandle = osThreadCreate(osThread(SENSOR_TASK), NULL);
 
+  /* definition and creation of COMM_TASK */
+  osThreadDef(COMM_TASK, commTask, osPriorityIdle, 0, 256);
+  COMM_TASKHandle = osThreadCreate(osThread(COMM_TASK), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add tasks, ... */
   /* USER CODE END RTOS_THREADS */
+
+  /* Create the queue(s) */
+  /* definition and creation of UserCommandQueue */
+/* what about the sizeof here??? cd native code */
+  osMessageQDef(UserCommandQueue, 4, COMM_MSG);
+  UserCommandQueueHandle = osMessageCreate(osMessageQ(UserCommandQueue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -432,6 +447,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Stream1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+  /* DMA1_Stream5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
   /* DMA1_Stream6_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
@@ -561,13 +579,13 @@ static void prepareADCData(void)
   meas.roll = (vol[TRACK_DIP_0] - vol[TRACK_DIP_A1]) / TILT_SCALE_FACTOR;
   meas.roll = asin(meas.roll) - TILT_AXIS_MISALIGNMENT_ANGLE;
   
-#if 0
   // calibrate
-  meas.compensation = calibrateADCData(CAL_DIST_COMPENSATION, meas.compensation);
-  meas.height       = calibrateADCData(CAL_HEIGHT, meas.height);
-  meas.distance     = calibrateADCData(CAL_DISTANCE, meas.distance);
-  meas.roll         = calibrateADCData(CAL_DIP, meas.roll);
-#endif
+  if (mode == MODE_NORMAL_WORK) {
+    meas.compensation = calibrateADCData(CAL_DIST_COMPENSATION, meas.compensation);
+    meas.height       = calibrateADCData(CAL_HEIGHT, meas.height);
+    meas.distance     = calibrateADCData(CAL_DISTANCE, meas.distance);
+    meas.roll         = calibrateADCData(CAL_DIP, meas.roll);
+  }
 }
 
 static float calibrateADCData(ADC_CAL item, float raw)
@@ -627,6 +645,18 @@ static void sendData2PC(void)
 #endif
 }
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  assert_param(huart != &huart2);
+  
+  if (huart == &huart3) {
+    uart3RxCallback();
+  }
+  else if (huart == &huart6) {
+    uart6RxCallback();
+  }
+}
+
 /* USER CODE END 4 */
 
 /* mainTask function */
@@ -641,16 +671,17 @@ void mainTask(void const * argument)
   initData();
   startGyro();
   startEncoder();
+  startCommunication();
   
   while(1) {
-    //osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
+    osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
     prepareADCData();
     sendData2PC();
-    osDelay(500);
+    //osDelay(500);
   }
   
   /* USER CODE END 5 */ 
@@ -678,6 +709,18 @@ __weak void sensorTask(void const * argument)
     osDelay(1);
   }
   /* USER CODE END sensorTask */
+}
+
+/* commTask function */
+__weak void commTask(void const * argument)
+{
+  /* USER CODE BEGIN commTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END commTask */
 }
 
 /**

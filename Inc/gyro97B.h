@@ -12,5 +12,7 @@
 #define __GYRO97B_H__
 
 void startGyro(void);
+void uart3RxCallback(void);
+void uart6RxCallback(void);
 
 #endif // __GYRO97B_H__

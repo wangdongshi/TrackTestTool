@@ -20,6 +20,7 @@
 #define CIRCULAR_ANGLE_DEGREE   360.0f    // Unit : degree
 
 /* External Variables --------------------------------------------------------*/
+extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 //extern float gyro[2]; // gyro integral data (angle, unit : degree)
@@ -48,24 +49,26 @@ void startGyro(void)
   assert_param(status == HAL_OK);
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void uart3RxCallback(void)
 {
   int32_t gyro_24bit;
   
-  if (huart == &huart3) {
-    if (gyro1[0] != GYRO_FIRST_BYTE) return;
-    gyro_24bit = (((int32_t)gyro1[2]) << 16) + (((int32_t)gyro1[3]) << 8) + (int32_t)gyro1[1];
-    gyro_24bit = (gyro_24bit << 8) >> 8;
-    meas.omega1 = (float)gyro_24bit / GYRO_SCALE_FACTOR1 - gyro_zero_offset[0];
-    meas.yaw += meas.omega1 / GYRO_UPDATE_FREQUENCY;
-    if (meas.yaw > CIRCULAR_ANGLE_DEGREE) meas.yaw -= CIRCULAR_ANGLE_DEGREE;
-  }
-  else if (huart == &huart6) {
-    if (gyro2[0] != GYRO_FIRST_BYTE) return;
-    gyro_24bit = (((int32_t)gyro2[2]) << 16) + (((int32_t)gyro2[3]) << 8) + (int32_t)gyro2[1];
-    gyro_24bit = (gyro_24bit << 8) >> 8;
-    meas.omega2 = (float)gyro_24bit / GYRO_SCALE_FACTOR2 - gyro_zero_offset[1] ;
-    meas.pitch += meas.omega2 / GYRO_UPDATE_FREQUENCY;
-    if (meas.pitch > CIRCULAR_ANGLE_DEGREE) meas.pitch -= CIRCULAR_ANGLE_DEGREE;
-  }
+  if (gyro1[0] != GYRO_FIRST_BYTE) return;
+  gyro_24bit = (((int32_t)gyro1[2]) << 16) + (((int32_t)gyro1[3]) << 8) + (int32_t)gyro1[1];
+  gyro_24bit = (gyro_24bit << 8) >> 8;
+  meas.omega1 = (float)gyro_24bit / GYRO_SCALE_FACTOR1 - gyro_zero_offset[0];
+  meas.yaw += meas.omega1 / GYRO_UPDATE_FREQUENCY;
+  if (meas.yaw > CIRCULAR_ANGLE_DEGREE) meas.yaw -= CIRCULAR_ANGLE_DEGREE;
+}
+
+void uart6RxCallback(void)
+{
+  int32_t gyro_24bit;
+  
+  if (gyro2[0] != GYRO_FIRST_BYTE) return;
+  gyro_24bit = (((int32_t)gyro2[2]) << 16) + (((int32_t)gyro2[3]) << 8) + (int32_t)gyro2[1];
+  gyro_24bit = (gyro_24bit << 8) >> 8;
+  meas.omega2 = (float)gyro_24bit / GYRO_SCALE_FACTOR2 - gyro_zero_offset[1] ;
+  meas.pitch += meas.omega2 / GYRO_UPDATE_FREQUENCY;
+  if (meas.pitch > CIRCULAR_ANGLE_DEGREE) meas.pitch -= CIRCULAR_ANGLE_DEGREE;
 }

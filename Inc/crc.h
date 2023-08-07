@@ -2,25 +2,17 @@
  * Copyright (c) 2023 - 2035 by WangYu
  * All rights reserved
  *
- * Filename : debug.h
+ * Filename : crc.h
  * Project  : Track Test Tool
- * Date     : 2023/7/3
+ * Date     : 2023/8/7
  * Author   : WangYu
  *
  **********************************************************************/
-#ifndef __DEBUG_H__
-#define __DEBUG_H__
+#ifndef __CRC_H__
+#define __CRC_H__
 
-//#define DEBUG
+#include <stdint.h>
 
-#ifdef DEBUG
+uint16_t calcCRC16(uint8_t *pbuf, uint8_t nlen);
 
-#define PRINTF   printf
-
-#else
-
-void PRINTF(const char *format, ...);
-
-#endif
-
-#endif // __DEBUG_H__
+#endif // __CRC_H__
