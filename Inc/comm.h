@@ -13,10 +13,6 @@
 
 #include <stdint.h>
 
-#define COMM_RX_BUFFER_SIZE     100
-
-extern uint8_t rxBuffer[COMM_RX_BUFFER_SIZE];
-
 typedef enum {
   MODE_PRE_WORK = 0,
   MODE_NORMAL_WORK,

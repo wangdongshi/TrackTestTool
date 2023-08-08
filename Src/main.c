@@ -80,10 +80,12 @@ osThreadId MAIN_TASKHandle;
 osThreadId ADC_TASKHandle;
 osThreadId SENSOR_TASKHandle;
 osThreadId COMM_TASKHandle;
-osMessageQId UserCommandQueueHandle;
+osThreadId MONITOR_TASKHandle;
+osMutexId UserCommandMutexHandle;
 osSemaphoreId AdcConvertStartSemHandle;
 osSemaphoreId AdcConvertCompleteSemHandle;
 osSemaphoreId EncoderArriveSemHandle;
+osSemaphoreId UserCommandArriveSemHandle;
 
 /* USER CODE BEGIN PV */
 /* Private macro -------------------------------------------------------------*/
@@ -112,6 +114,7 @@ void mainTask(void const * argument);
 void adcTask(void const * argument);
 void sensorTask(void const * argument);
 void commTask(void const * argument);
+void monitorTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -165,6 +168,11 @@ int main(void)
 
   /* USER CODE END 2 */
 
+  /* Create the mutex(es) */
+  /* definition and creation of UserCommandMutex */
+  osMutexDef(UserCommandMutex);
+  UserCommandMutexHandle = osMutexCreate(osMutex(UserCommandMutex));
+
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -182,6 +190,10 @@ int main(void)
   osSemaphoreDef(EncoderArriveSem);
   EncoderArriveSemHandle = osSemaphoreCreate(osSemaphore(EncoderArriveSem), 1);
 
+  /* definition and creation of UserCommandArriveSem */
+  osSemaphoreDef(UserCommandArriveSem);
+  UserCommandArriveSemHandle = osSemaphoreCreate(osSemaphore(UserCommandArriveSem), 1);
+
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -192,30 +204,28 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of MAIN_TASK */
-  osThreadDef(MAIN_TASK, mainTask, osPriorityNormal, 0, 512);
+  osThreadDef(MAIN_TASK, mainTask, osPriorityHigh, 0, 512);
   MAIN_TASKHandle = osThreadCreate(osThread(MAIN_TASK), NULL);
 
   /* definition and creation of ADC_TASK */
-  osThreadDef(ADC_TASK, adcTask, osPriorityBelowNormal, 0, 128);
+  osThreadDef(ADC_TASK, adcTask, osPriorityNormal, 0, 128);
   ADC_TASKHandle = osThreadCreate(osThread(ADC_TASK), NULL);
 
   /* definition and creation of SENSOR_TASK */
-  osThreadDef(SENSOR_TASK, sensorTask, osPriorityLow, 0, 128);
+  osThreadDef(SENSOR_TASK, sensorTask, osPriorityBelowNormal, 0, 128);
   SENSOR_TASKHandle = osThreadCreate(osThread(SENSOR_TASK), NULL);
 
   /* definition and creation of COMM_TASK */
-  osThreadDef(COMM_TASK, commTask, osPriorityIdle, 0, 256);
+  osThreadDef(COMM_TASK, commTask, osPriorityLow, 0, 256);
   COMM_TASKHandle = osThreadCreate(osThread(COMM_TASK), NULL);
+
+  /* definition and creation of MONITOR_TASK */
+  osThreadDef(MONITOR_TASK, monitorTask, osPriorityIdle, 0, 128);
+  MONITOR_TASKHandle = osThreadCreate(osThread(MONITOR_TASK), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add tasks, ... */
   /* USER CODE END RTOS_THREADS */
-
-  /* Create the queue(s) */
-  /* definition and creation of UserCommandQueue */
-/* what about the sizeof here??? cd native code */
-  osMessageQDef(UserCommandQueue, 4, COMM_MSG);
-  UserCommandQueueHandle = osMessageCreate(osMessageQ(UserCommandQueue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -675,7 +685,6 @@ void mainTask(void const * argument)
   
   while(1) {
     osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
-    LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
@@ -721,6 +730,19 @@ __weak void commTask(void const * argument)
     osDelay(1);
   }
   /* USER CODE END commTask */
+}
+
+/* monitorTask function */
+void monitorTask(void const * argument)
+{
+  /* USER CODE BEGIN monitorTask */
+  /* Infinite loop */
+  while(1) {
+    LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+    if (mode == MODE_PRE_WORK) osDelay(100);
+    else if (mode == MODE_NORMAL_WORK) osDelay(500);
+  }
+  /* USER CODE END monitorTask */
 }
 
 /**
