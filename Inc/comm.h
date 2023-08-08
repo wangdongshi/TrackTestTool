@@ -14,16 +14,23 @@
 #include <stdint.h>
 
 typedef enum {
+  COMM_CHANGE_TO_NORMAL_MODE = 0, // change mode from pre-work to work
+  COMM_RESET_MILAGE,
+  COMM_CHANGE_OUTPUT_FORMAT,
+  COMM_NUMBER_MAX
+} COMM_TYPE;
+
+typedef enum {
   MODE_PRE_WORK = 0,
   MODE_NORMAL_WORK,
   MODE_NUMBER_MAX
 } WORK_MODE;
 
 typedef enum {
-  COMM_CHANGE_TO_NORMAL_MODE = 0, // change mode from pre-work to work
-  COMM_RESET_MILAGE,
-  COMM_NUMBER_MAX
-} COMM_TYPE;
+  OUTPUT_JUSTFLOAT = 0,
+  OUTPUT_FIREWATER,
+  OUTPUT_NUMBER_MAX
+} OUTPUT_MODE;
 
 typedef struct {
   uint32_t  length;
@@ -33,6 +40,7 @@ typedef struct {
   float     zeroOffset2; // gyro2
   float     startAngle1; // gyro1
   float     startAngle2; // gyro2
+  uint16_t  outFormat;
 } COMM_MSG;
 
 void startCommunication(void);

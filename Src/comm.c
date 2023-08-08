@@ -8,6 +8,8 @@
  * Author   : WangYu
  *
  **********************************************************************/
+ 
+ /* Includes ------------------------------------------------------------------*/
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,10 +18,13 @@
 #include "comm.h"
 #include "crc.h"
 
+/* Private macro -------------------------------------------------------------*/
 #define COMM_TX_BUFFER_SIZE     200
 #define COMM_RX_BUFFER_SIZE     100
 #define COMM_LEADING_BYTE       0xFFFF
+#define COMM_FLOAT_NAN          0x7F800000
 
+/* External variables --------------------------------------------------------*/
 extern UART_HandleTypeDef huart2;
 extern DMA_HandleTypeDef hdma_usart2_rx;
 
@@ -28,7 +33,9 @@ extern osSemaphoreId UserCommandArriveSemHandle;
 
 extern TRACK_MEAS_ITEM meas;
 extern float gyro_zero_offset[2];
+extern uint8_t format;
 
+/* Private variables ---------------------------------------------------------*/
 static uint8_t txBuffer[COMM_TX_BUFFER_SIZE];
 static uint8_t rxBuffer[COMM_RX_BUFFER_SIZE];
 
@@ -36,12 +43,14 @@ COMM_MSG command; // It's a shared memory parameter which is protected by mutex.
 
 uint8_t mode = MODE_PRE_WORK;
 
+/* Private function prototypes -----------------------------------------------*/
 static uint16_t swapUint16(uint16_t value);
 static uint32_t swapUint32(uint32_t value);
 static float swapFloat(float value);
+
 static HAL_StatusTypeDef HAL_UART_RX_DMAStop(UART_HandleTypeDef *huart);
 
-
+/* Formal function definitions -----------------------------------------------*/
 void startCommunication(void)
 {
   HAL_StatusTypeDef status;
@@ -75,6 +84,9 @@ void commTask(void const * argument)
         break;
       case COMM_RESET_MILAGE:
         meas.mileage = msg.startPoint;
+        break;
+      case COMM_CHANGE_OUTPUT_FORMAT:
+        format = msg.outFormat;
         break;
       default:
         break;
@@ -110,14 +122,17 @@ void uart2RxCallback(void)
   command.type    = swapUint16(*(uint16_t*)(&rxBuffer[2]));
   switch (command.type) {
     case COMM_CHANGE_TO_NORMAL_MODE:
-      command.startPoint  = swapFloat(*(float*)(&rxBuffer[4]));
-      command.zeroOffset1 = swapFloat(*(float*)(&rxBuffer[8]));
-      command.zeroOffset2 = swapFloat(*(float*)(&rxBuffer[12]));
-      command.startAngle1 = swapFloat(*(float*)(&rxBuffer[16]));
-      command.startAngle2 = swapFloat(*(float*)(&rxBuffer[20]));
+      command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
+      command.zeroOffset1  = swapFloat(*(float*)(&rxBuffer[8]));
+      command.zeroOffset2  = swapFloat(*(float*)(&rxBuffer[12]));
+      command.startAngle1  = swapFloat(*(float*)(&rxBuffer[16]));
+      command.startAngle2  = swapFloat(*(float*)(&rxBuffer[20]));
       break;
     case COMM_RESET_MILAGE:
-      command.startPoint  = swapFloat(*(float*)(&rxBuffer[4]));
+      command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
+      break;
+    case COMM_CHANGE_OUTPUT_FORMAT:
+      command.outFormat = swapUint16(*(uint16_t*)(&rxBuffer[4]));
       break;
     default:
       break;
@@ -148,7 +163,7 @@ void PRINTF2(const char *format, ...) // UART2 for RS485/RS232/USB/Ethernet
 void TRACEFLOAT(float* input, unsigned short length) // UART2 for VOFA+
 {
   memcpy((void*)txBuffer, (void*)input, (size_t)(length * sizeof(float)));
-  *((uint32_t*)txBuffer + length) = 0x7F800000;
+  *((uint32_t*)txBuffer + length) = COMM_FLOAT_NAN;
   
   HAL_UART_Transmit_DMA(&huart2, txBuffer, (length + 1) * sizeof(float));
 }

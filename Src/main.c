@@ -89,14 +89,14 @@ osSemaphoreId UserCommandArriveSemHandle;
 
 /* USER CODE BEGIN PV */
 /* Private macro -------------------------------------------------------------*/
-#define JUSTFLOAT
 #define VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
 
 /* Private structs -----------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-TRACK_MEAS_ITEM  meas = {0.0f};
-int32_t          adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
+TRACK_MEAS_ITEM meas = {0.0f};
+int32_t         adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
+uint8_t         format = OUTPUT_JUSTFLOAT;
 
 /* USER CODE END PV */
 
@@ -587,6 +587,8 @@ static void prepareADCData(void)
   // calculate dip angle
   // Angle = arcsin((E0-Eb)/SF)-Theta
   meas.roll = (vol[TRACK_DIP_0] - vol[TRACK_DIP_A1]) / TILT_SCALE_FACTOR;
+  if (meas.roll > +1.0f) meas.roll = +1.0f;
+  if (meas.roll < -1.0f) meas.roll = -1.0f;
   meas.roll = asin(meas.roll) - TILT_AXIS_MISALIGNMENT_ANGLE;
   
   // calibrate
@@ -605,13 +607,13 @@ static float calibrateADCData(ADC_CAL item, float raw)
   uint8_t index;
   float alpha, result;
   
-  for (uint8_t index = 0; index < CAL_POINTS; index++) {
-    if (isnan(tbl[item][index].meas)) return INFINITY; // overflow
+  for (index = 0; index < CAL_POINTS; index++) {
+    if (isnan(tbl[item][index].meas)) return tbl[item][index - 1].real; // overflow
     if (tbl[item][index].meas == raw) return tbl[item][index].real;
     if (tbl[item][index].meas > raw) break;
   }
   
-  if (index == CAL_POINTS) return INFINITY; // overflow
+  if (index == CAL_POINTS) return tbl[item][index - 1].real; // overflow
   
   alpha = (tbl[item][index].meas - raw) /
           (tbl[item][index].meas - tbl[item][index - 1].meas);
@@ -623,36 +625,31 @@ static float calibrateADCData(ADC_CAL item, float raw)
 
 static void sendData2PC(void)
 {
-  /* Here, all the information to be output needs to be concentrated in one 
-     PRINTF2 statement for output, so that the highest efficiency can be obtained. 
-     Because PRINTF2 is sent by DMA, and the buffer is 200 bytes.
-   */
-  
-#ifdef JUSTFLOAT
-    
-  // In normal mode, the data can be confirmed by VOFA+ JustFloat engine.
-  unsigned short length = sizeof(meas) / sizeof(float);
-  
-  TRACEFLOAT((float*)&meas, length);
-
-#else
-  
-  // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-  PRINTF2("DATA:%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f,%ld\r\n",
-          meas.mileage,
-          meas.height,
-          meas.distance,
-          meas.compensation,
-          meas.roll,
-          meas.yaw,
-          meas.pitch,
-          meas.battery,
-          meas.omega1,
-          meas.omega2,
-          meas.sequence
-  );
-
-#endif
+  if(format == OUTPUT_JUSTFLOAT) {
+    // In normal mode, the data can be confirmed by VOFA+ JustFloat engine.
+    unsigned short length = sizeof(meas) / sizeof(float);
+    TRACEFLOAT((float*)&meas, length);
+    /* Here, all the information to be output needs to be concentrated in one 
+     * PRINTF2 statement for output, so that the highest efficiency can be obtained. 
+     * Because PRINTF2 is sent by DMA, and the buffer is 200 bytes.
+     */
+  }
+  else if (format == OUTPUT_FIREWATER) {
+    // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
+    PRINTF2("DATA:%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f,%.2f,%ld\r\n",
+            meas.mileage,
+            meas.height,
+            meas.distance,
+            meas.compensation,
+            meas.roll,
+            meas.yaw,
+            meas.pitch,
+            meas.battery,
+            meas.omega1,
+            meas.omega2,
+            meas.sequence
+    );
+  }
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -684,13 +681,17 @@ void mainTask(void const * argument)
   startCommunication();
   
   while(1) {
-    osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
+    if (mode == MODE_NORMAL_WORK) {
+      osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
+    }
+    else {
+      osDelay(500);
+    }
     osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
     prepareADCData();
     sendData2PC();
-    //osDelay(500);
   }
   
   /* USER CODE END 5 */ 
