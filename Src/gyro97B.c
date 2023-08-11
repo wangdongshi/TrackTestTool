@@ -23,7 +23,6 @@
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
-//extern float gyro[2]; // gyro integral data (angle, unit : degree)
 extern TRACK_MEAS_ITEM meas;
 
 /* Private Variables ---------------------------------------------------------*/
@@ -49,6 +48,7 @@ void startGyro(void)
   assert_param(status == HAL_OK);
 }
 
+// yaw
 void uart3RxCallback(void)
 {
   int32_t gyro_24bit;
@@ -61,6 +61,7 @@ void uart3RxCallback(void)
   if (meas.yaw > CIRCULAR_ANGLE_DEGREE) meas.yaw -= CIRCULAR_ANGLE_DEGREE;
 }
 
+// pitch
 void uart6RxCallback(void)
 {
   int32_t gyro_24bit;
@@ -68,7 +69,7 @@ void uart6RxCallback(void)
   if (gyro2[0] != GYRO_FIRST_BYTE) return;
   gyro_24bit = (((int32_t)gyro2[2]) << 16) + (((int32_t)gyro2[3]) << 8) + (int32_t)gyro2[1];
   gyro_24bit = (gyro_24bit << 8) >> 8;
-  meas.omega2 = (float)gyro_24bit / GYRO_SCALE_FACTOR2 - gyro_zero_offset[1] ;
+  meas.omega2 = (float)gyro_24bit / GYRO_SCALE_FACTOR2 - gyro_zero_offset[1];
   meas.pitch += meas.omega2 / GYRO_UPDATE_FREQUENCY;
   if (meas.pitch > CIRCULAR_ANGLE_DEGREE) meas.pitch -= CIRCULAR_ANGLE_DEGREE;
 }

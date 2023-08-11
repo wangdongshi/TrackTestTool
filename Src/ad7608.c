@@ -14,6 +14,8 @@
 #include "stm32f4xx_hal.h"
 #include "cmsis_os.h"
 #include "ad7608.h"
+#include "comm.h"
+#include "calibrator.h"
 
 /* Private macro -------------------------------------------------------------*/
 
@@ -26,7 +28,7 @@
  * DOA  : PA06
  */
 
-/* Output definition */
+/* Private macro definition */
 #define AD7608_CH_DATA_RESOLUTION   18
 #define AD7608_DMA_BUFFER_LENGTH    (AD7608_CH_NUMBER * AD7608_CH_DATA_RESOLUTION / 8)
 #define AD7608_CONVSTA_H   LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_4)
@@ -35,11 +37,18 @@
 #define AD7608_RESET_L   LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7)
 #define AD7608_BUSY       LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_5)
 
+#define ADC_VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
+#define INERTIAL_SENSOR_ZERO_OUTPUT      2.50f              // 2.47 to 2.53
+#define CIRCULAR_ANGLE_DEGREE            360.0f             // Unit : degree
+#define PI                               3.1415926f
+
 /* External Variables --------------------------------------------------------*/
 extern SPI_HandleTypeDef hspi1;
 extern osSemaphoreId AdcConvertStartSemHandle;
 extern osSemaphoreId AdcConvertCompleteSemHandle;
 extern uint32_t adc[AD7608_CH_NUMBER];
+extern TRACK_MEAS_ITEM meas;
+extern uint8_t mode;
 
 /* Private Variables ---------------------------------------------------------*/
 static uint8_t buff[AD7608_DMA_BUFFER_LENGTH];
@@ -48,6 +57,7 @@ static uint8_t buff[AD7608_DMA_BUFFER_LENGTH];
 static void AD7608_RESET(void);
 static void AD7608_TRIGGER(void);
 static void Delay(uint32_t nCount);
+static float calibrateADCData(ADC_CAL item, float raw);
 
 /* Formal function definitions -----------------------------------------------*/
 void adcTask(void const * argument)
@@ -108,4 +118,59 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 #endif
   
   osSemaphoreRelease(AdcConvertCompleteSemHandle);
+}
+
+void changeADCData2ActualValue(void)
+{
+  float vol[AD7608_CH_NUMBER];
+  
+  // ADC data --> voltage (-5V to +5V)
+  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
+    vol[i] = (float)((adc[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
+  }
+  
+  meas.compensation = vol[TRACK_DIST_COMPENSATION];
+  meas.height       = vol[TRACK_HEIGHT];
+  meas.distance     = vol[TRACK_DISTANCE];
+  meas.battery      = vol[TRACK_BATTERY_VOLTAGE];
+  
+  // calculate dip angle
+  // Angle = arcsin((E0-Eb)/SF)-Theta
+  meas.roll = (vol[TRACK_DIP_0] - vol[TRACK_DIP_A1] + INERTIAL_SENSOR_ZERO_OUTPUT) /
+              TILT_SCALE_FACTOR;
+  if (meas.roll > +1.0f) meas.roll = +1.0f;
+  if (meas.roll < -1.0f) meas.roll = -1.0f;
+  meas.roll = asin(meas.roll) * CIRCULAR_ANGLE_DEGREE / (2.0f * PI) - 
+              TILT_AXIS_MISALIGNMENT_ANGLE;
+  
+  // calibrate
+  if (mode == MODE_NORMAL_WORK) {
+    meas.compensation = calibrateADCData(CAL_DIST_COMPENSATION, meas.compensation);
+    meas.height       = calibrateADCData(CAL_HEIGHT, meas.height);
+    meas.distance     = calibrateADCData(CAL_DISTANCE, meas.distance);
+    meas.roll         = calibrateADCData(CAL_DIP, meas.roll);
+  }
+}
+
+static float calibrateADCData(ADC_CAL item, float raw)
+{
+  assert_param(item < CAL_ITEMS);
+  
+  uint8_t index;
+  float alpha, result;
+  
+  for (index = 0; index < CAL_POINTS; index++) {
+    if (isnan(tbl[item][index].meas)) return tbl[item][index - 1].real; // overflow
+    if (tbl[item][index].meas == raw) return tbl[item][index].real;
+    if (tbl[item][index].meas > raw) break;
+  }
+  
+  if (index == CAL_POINTS) return tbl[item][index - 1].real; // overflow
+  
+  alpha = (tbl[item][index].meas - raw) /
+          (tbl[item][index].meas - tbl[item][index - 1].meas);
+  result = tbl[item][index].real - alpha * 
+          (tbl[item][index].real - tbl[item][index - 1].real);
+  
+  return result;
 }

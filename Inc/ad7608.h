@@ -25,5 +25,6 @@ typedef enum {
 } ADC_CH;
 
 void ADC_Task(void const * argument);
+void changeADCData2ActualValue(void);
 
 #endif // __ADC7608_H__

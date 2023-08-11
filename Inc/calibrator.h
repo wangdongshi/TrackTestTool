@@ -35,8 +35,8 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
 #define MILEAGE_WHEEL_DIAMETER              63.66f  // Unit : mm
 
 // Gyro
-#define GYRO_SCALE_FACTOR1                89931.8f  // Unit : degree/s
-#define GYRO_SCALE_FACTOR2                89942.9f  // Unit : degree/s
+#define GYRO_SCALE_FACTOR1                89931.8f  // gyro1 : use for yaw angle test   (unit : degree/s)
+#define GYRO_SCALE_FACTOR2                89942.9f  // gyro2 : use for pitch angle test (unit : degree/s)
 
 // Tilt sensor
 #define TILT_SCALE_FACTOR                   17.96f

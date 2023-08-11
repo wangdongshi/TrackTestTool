@@ -109,7 +109,7 @@ void uart2RxCallback(void)
   if (((rxBuffer[0] << 8) | rxBuffer[1]) != COMM_LEADING_BYTE) return; // Pre-guide code is error.
   uint16_t remainder  = __HAL_DMA_GET_COUNTER(&hdma_usart2_rx);
   uint16_t length     = COMM_RX_BUFFER_SIZE - remainder;
-  uint16_t crc16      = swapUint16(calcCRC16(&rxBuffer[2], (length - 4)));
+  uint16_t crc16      = swapUint16(calcCRC16(&rxBuffer[2], (length - 4))); // // Add modbus CRC
   if (crc16 != ((rxBuffer[length - 2] << 8) | rxBuffer[length - 1])) return;
   
   // Stop UART2 RX DMA transfer
