@@ -96,6 +96,10 @@ void commTask(void const * argument)
           gyro_count[0] = 0;
           gyro_count[1] = 0;
         }
+        else if (gyroMode == GYRO_OFFSET_REMOVED) {
+          meas.yaw = 0.0f;
+          meas.pitch = 0.0f;
+        }
         break;
       default:
         break;
