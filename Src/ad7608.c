@@ -48,7 +48,7 @@ extern osSemaphoreId AdcConvertStartSemHandle;
 extern osSemaphoreId AdcConvertCompleteSemHandle;
 extern uint32_t adc[AD7608_CH_NUMBER];
 extern TRACK_MEAS_ITEM meas;
-extern uint8_t mode;
+extern WORK_MODE workMode;
 
 /* Private Variables ---------------------------------------------------------*/
 const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
@@ -145,7 +145,7 @@ void changeADCData2ActualValue(void)
               TILT_AXIS_MISALIGNMENT_ANGLE;
   
   // calibrate
-  if (mode == MODE_NORMAL_WORK) {
+  if (workMode == MODE_NORMAL_WORK) {
     meas.compensation = calibrateADCData(CAL_DIST_COMPENSATION, meas.compensation);
     meas.height       = calibrateADCData(CAL_HEIGHT, meas.height);
     meas.distance     = calibrateADCData(CAL_DISTANCE, meas.distance);

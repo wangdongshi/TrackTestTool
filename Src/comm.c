@@ -32,7 +32,8 @@ extern osMutexId UserCommandMutexHandle;
 extern osSemaphoreId UserCommandArriveSemHandle;
 
 extern TRACK_MEAS_ITEM meas;
-extern float gyro_zero_offset[2];
+extern volatile float gyro_zero_offset[2];
+extern volatile uint64_t gyro_count[2];
 extern uint8_t format;
 
 /* Private variables ---------------------------------------------------------*/
@@ -41,7 +42,8 @@ static uint8_t rxBuffer[COMM_RX_BUFFER_SIZE];
 
 COMM_MSG command; // It's a shared memory parameter which is protected by mutex.
 
-uint8_t mode = MODE_PRE_WORK;
+WORK_MODE workMode = MODE_PRE_WORK;
+GYRO_MODE gyroMode = GYRO_OFFSET_HOLD;
 
 /* Private function prototypes -----------------------------------------------*/
 static uint16_t swapUint16(uint16_t value);
@@ -75,10 +77,8 @@ void commTask(void const * argument)
     
     switch (msg.type) {
       case COMM_CHANGE_TO_NORMAL_MODE:
-        mode = MODE_NORMAL_WORK;
+        workMode = MODE_NORMAL_WORK;
         meas.mileage = msg.startPoint;
-        gyro_zero_offset[0] = msg.zeroOffset1;
-        gyro_zero_offset[1] = msg.zeroOffset2;
         meas.yaw   = msg.startAngle1;
         meas.pitch = msg.startAngle2;
         break;
@@ -87,6 +87,15 @@ void commTask(void const * argument)
         break;
       case COMM_CHANGE_OUTPUT_FORMAT:
         format = msg.outFormat;
+        break;
+      case COMM_REMOVE_GYRO_ZERO_DRIFT:
+        gyroMode = (GYRO_MODE)msg.gyroMode;
+        if (gyroMode == GYRO_OFFSET_HOLD) {
+          gyro_zero_offset[0] = 0.0f;
+          gyro_zero_offset[1] = 0.0f;
+          gyro_count[0] = 0;
+          gyro_count[1] = 0;
+        }
         break;
       default:
         break;
@@ -123,16 +132,17 @@ void uart2RxCallback(void)
   switch (command.type) {
     case COMM_CHANGE_TO_NORMAL_MODE:
       command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
-      command.zeroOffset1  = swapFloat(*(float*)(&rxBuffer[8]));
-      command.zeroOffset2  = swapFloat(*(float*)(&rxBuffer[12]));
-      command.startAngle1  = swapFloat(*(float*)(&rxBuffer[16]));
-      command.startAngle2  = swapFloat(*(float*)(&rxBuffer[20]));
+      command.startAngle1  = swapFloat(*(float*)(&rxBuffer[8]));
+      command.startAngle2  = swapFloat(*(float*)(&rxBuffer[12]));
       break;
     case COMM_RESET_MILAGE:
       command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
       break;
     case COMM_CHANGE_OUTPUT_FORMAT:
       command.outFormat = swapUint16(*(uint16_t*)(&rxBuffer[4]));
+      break;
+    case COMM_REMOVE_GYRO_ZERO_DRIFT:
+      command.gyroMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
       break;
     default:
       break;

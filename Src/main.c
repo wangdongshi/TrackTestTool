@@ -122,7 +122,7 @@ static void  sendData2PC(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-extern uint8_t mode;
+extern WORK_MODE workMode;
 /* USER CODE END 0 */
 
 /**
@@ -625,7 +625,7 @@ void mainTask(void const * argument)
   startCommunication();
   
   while(1) {
-    //if (mode == MODE_NORMAL_WORK) {
+    //if (workMode == MODE_NORMAL_WORK) {
     //  osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     //}
     //else {
@@ -684,8 +684,8 @@ void monitorTask(void const * argument)
   /* Infinite loop */
   while(1) {
     LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-    if (mode == MODE_PRE_WORK) osDelay(100);
-    else if (mode == MODE_NORMAL_WORK) osDelay(500);
+    if (workMode == MODE_PRE_WORK) osDelay(100);
+    else if (workMode == MODE_NORMAL_WORK) osDelay(500);
   }
   /* USER CODE END monitorTask */
 }
