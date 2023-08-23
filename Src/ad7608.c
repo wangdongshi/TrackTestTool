@@ -51,6 +51,7 @@ extern TRACK_MEAS_ITEM meas;
 extern uint8_t mode;
 
 /* Private Variables ---------------------------------------------------------*/
+const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
 static uint8_t buff[AD7608_DMA_BUFFER_LENGTH];
 
 /* Private function prototypes -----------------------------------------------*/

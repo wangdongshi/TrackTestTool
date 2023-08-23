@@ -103,7 +103,7 @@ void uart2RxCallback(void)
   
   // Check interrupt type
   uint32_t idleFlag   = __HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE);
-  if(idleFlag == (uint32_t)(RESET)) return; // There are some errors in interrupt.
+  if(idleFlag == (uint32_t)(RESET)) return; // Only UART2 idle interrupt is handled here.
   
   // Check message content
   if (((rxBuffer[0] << 8) | rxBuffer[1]) != COMM_LEADING_BYTE) return; // Pre-guide code is error.
