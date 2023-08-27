@@ -40,6 +40,7 @@
 #define ADC_VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
 #define INERTIAL_SENSOR_ZERO_OUTPUT      2.50f              // 2.47 to 2.53
 #define CIRCULAR_ANGLE_DEGREE            360.0f             // Unit : degree
+#define STANDARD_TRACK_DISTANCE          1435.0f            // Unit : mm
 #define PI                               3.1415926f
 
 /* External Variables --------------------------------------------------------*/
@@ -123,6 +124,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 
 void changeADCData2ActualValue(void)
 {
+  float sin_roll;
   float vol[AD7608_CH_NUMBER];
   
   // ADC data --> voltage (-5V to +5V)
@@ -132,26 +134,27 @@ void changeADCData2ActualValue(void)
              ADC_VOLTAGE_TRANSFER_FACTOR;
   }
   
-  meas.compensation = vol[TRACK_DIST_COMPENSATION];
-  meas.height       = vol[TRACK_HEIGHT];
+  meas.distance_comp= vol[TRACK_DIST_COMPENSATION];
+  meas.height_comp  = vol[TRACK_HEIGHT];
   meas.distance     = vol[TRACK_DISTANCE];
   meas.battery      = vol[TRACK_BATTERY_VOLTAGE];
   
-  // calculate dip angle
+  // calculate dip angle and track height
   // Angle = arcsin((E0-Eb)/SF)-Theta
-  meas.roll = (vol[TRACK_DIP_A1] - vol[TRACK_DIP_0] - INERTIAL_SENSOR_ZERO_OUTPUT) /
+  sin_roll = (vol[TRACK_DIP_A1] - vol[TRACK_DIP_0] - INERTIAL_SENSOR_ZERO_OUTPUT) /
               TILT_SCALE_FACTOR;
-  if (meas.roll > +1.0f) meas.roll = +1.0f;
-  if (meas.roll < -1.0f) meas.roll = -1.0f;
-  meas.roll = asin(meas.roll) * CIRCULAR_ANGLE_DEGREE / (2.0f * PI) - 
+  if (sin_roll > +1.0f) sin_roll = +1.0f;
+  if (sin_roll < -1.0f) sin_roll = -1.0f;
+  meas.roll = asin(sin_roll) * CIRCULAR_ANGLE_DEGREE / (2.0f * PI) - 
               TILT_AXIS_MISALIGNMENT_ANGLE;
+  meas.height = sin_roll * STANDARD_TRACK_DISTANCE;
   
   // calibrate
   if (workMode == MODE_NORMAL_WORK) {
-    meas.compensation = calibrateADCData(CAL_DIST_COMPENSATION, meas.compensation);
-    meas.height       = calibrateADCData(CAL_HEIGHT, meas.height);
+    meas.distance_comp= calibrateADCData(CAL_DIST_COMPENSATION, meas.distance_comp);
+    meas.height_comp  = calibrateADCData(CAL_HEIGHT, meas.height_comp);
     meas.distance     = calibrateADCData(CAL_DISTANCE, meas.distance);
-    meas.roll         = calibrateADCData(CAL_DIP, meas.roll);
+    meas.height       = calibrateADCData(CAL_DIP, meas.height);
   }
 }
 
@@ -168,6 +171,7 @@ static float calibrateADCData(ADC_CAL item, float raw)
     if (tbl[item][index].meas > raw) break;
   }
   
+  if (index == 0) return tbl[item][0].real; // underflow
   if (index == CAL_POINTS) return tbl[item][index - 1].real; // overflow
   
   alpha = (tbl[item][index].meas - raw) /

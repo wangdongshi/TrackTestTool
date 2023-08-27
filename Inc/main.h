@@ -127,9 +127,10 @@
 
 typedef struct _meas {
   float mileage;      // measure by encoder
-  float height;
   float distance;
-  float compensation;
+  float distance_comp;
+  float height;
+  float height_comp;
   float roll;         // measure by dip sensor
   float yaw;          // integral by gyro1
   float pitch;        // integral by gyro2

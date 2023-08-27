@@ -17,8 +17,8 @@
 #define CAL_POINTS        20
 
 typedef struct _pair {
-  float meas;
   float real;
+  float meas;
 } CAL_PAIR;
 
 typedef enum {
@@ -46,7 +46,7 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
 #define CAL_TBL_DATA {                   \
   /* distance compensation */            \
   {                                      \
-          /* vol, distance */            \
+          /* vol, distance comp */       \
     /* 1*/ {0.0f, 0.001332f},            \
     /* 2*/ {1.0f, 0.001347f},            \
     /* 3*/ {2.0f, 0.001352f},            \
@@ -69,9 +69,9 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
     /*20*/ {NAN, NAN}                    \
   },                                     \
                                          \
-  /* height */                           \
+  /* height compensation */              \
   {                                      \
-          /* vol, height */              \
+          /* vol, height comp */         \
     /* 1*/ {0.0f, 0.1732f},              \
     /* 2*/ {1.0f, 0.1747f},              \
     /* 3*/ {2.0f, 0.1752f},              \
@@ -94,29 +94,29 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
     /*20*/ {NAN, NAN}                    \
   },                                     \
 										                     \
-  /* dip */                              \
+  /* height */                           \
   {                                      \
-         /* arcsin,arcsin */             \
-    /* 1*/ {-1.0f, -0.99f},              \
-    /* 2*/ {-0.5f, -0.55f},              \
-    /* 3*/ {-0.2f, -0.21f},              \
-    /* 4*/ {0.0f, 0.01f},                \
-    /* 5*/ {0.2f, 0.19f},                \
-    /* 6*/ {0.5f, 0.49f},                \
-    /* 7*/ {1.0f, 0.98f},                \
-    /* 8*/ {NAN, NAN},                   \
-    /* 9*/ {NAN, NAN},                   \
-    /*10*/ {NAN, NAN},                   \
-    /*11*/ {NAN, NAN},                   \
-    /*12*/ {NAN, NAN},                   \
-    /*13*/ {NAN, NAN},                   \
-    /*14*/ {NAN, NAN},                   \
-    /*15*/ {NAN, NAN},                   \
-    /*16*/ {NAN, NAN},                   \
-    /*17*/ {NAN, NAN},                   \
-    /*18*/ {NAN, NAN},                   \
-    /*19*/ {NAN, NAN},                   \
-    /*20*/ {NAN, NAN}                    \
+         /* height, height */            \
+    /* 1*/ {0.0f, 0.64f},                \
+    /* 2*/ {20.46f, 20.28f},             \
+    /* 3*/ {50.41f, 48.98f},             \
+    /* 4*/ {100.57f, 97.01f},            \
+    /* 1*/ {NAN, NAN/*-200.08f, NAN*/},  \
+    /* 2*/ {NAN, NAN/*-175.11f, NAN*/},  \
+    /* 3*/ {NAN, NAN/*-150.78f, NAN*/},  \
+    /* 4*/ {NAN, NAN/*-125.27f, NAN*/},  \
+    /* 5*/ {NAN, NAN/*-100.57f, NAN*/},  \
+    /* 6*/ {NAN, NAN/*-75.28f, NAN*/},   \
+    /* 7*/ {NAN, NAN/*-50.41f, NAN*/},   \
+    /* 8*/ {NAN, NAN/*-40.47f, NAN*/},   \
+    /* 9*/ {NAN, NAN/*-20.46f, NAN*/},   \
+    /*10*/ {NAN, NAN/*-15.39f, NAN*/},   \
+    /*11*/ {NAN, NAN/*0.0f, 0.64f*/},    \
+    /*12*/ {NAN, NAN/*15.39f, NAN*/},    \
+    /*13*/ {NAN, NAN/*20.46f, 20.28f*/}, \
+    /*14*/ {NAN, NAN/*40.47f, NAN*/},    \
+    /*15*/ {NAN, NAN/*50.41f, 48.98f*/}, \
+    /*20*/ {NAN, NAN/*175.11f, NAN*/}    \
   },                                     \
 										                     \
   /* distance */                         \
