@@ -580,7 +580,7 @@ static void sendData2PC(void)
   }
   else if (format == OUTPUT_FIREWATER) {
     // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-    PRINTF2("DATA:%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.6f,%.6f,%ld\r\n",
+    PRINTF2("DATA:%.3f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.6f,%.6f,%ld,%.4f\r\n",
             meas.mileage,
             meas.height,
             meas.distance,
@@ -591,7 +591,8 @@ static void sendData2PC(void)
             meas.battery,
             meas.omega1,
             meas.omega2,
-            meas.sequence
+            meas.sequence,
+            sin(meas.roll * 2 * 3.14f / 360.0f) * 1435.0f
     );
   }
 }

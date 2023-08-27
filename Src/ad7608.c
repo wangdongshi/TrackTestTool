@@ -127,7 +127,9 @@ void changeADCData2ActualValue(void)
   
   // ADC data --> voltage (-5V to +5V)
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
-    vol[i] = (float)((adc[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
+    //vol[i] = (float)((adc[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
+    vol[i] = (float)((int32_t)(adc[i] ^ 0x00020000) - (int32_t)0x00020000) * 
+             ADC_VOLTAGE_TRANSFER_FACTOR;
   }
   
   meas.compensation = vol[TRACK_DIST_COMPENSATION];
@@ -137,7 +139,7 @@ void changeADCData2ActualValue(void)
   
   // calculate dip angle
   // Angle = arcsin((E0-Eb)/SF)-Theta
-  meas.roll = (vol[TRACK_DIP_0] - vol[TRACK_DIP_A1] + INERTIAL_SENSOR_ZERO_OUTPUT) /
+  meas.roll = (vol[TRACK_DIP_A1] - vol[TRACK_DIP_0] - INERTIAL_SENSOR_ZERO_OUTPUT) /
               TILT_SCALE_FACTOR;
   if (meas.roll > +1.0f) meas.roll = +1.0f;
   if (meas.roll < -1.0f) meas.roll = -1.0f;
