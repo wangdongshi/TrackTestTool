@@ -14,7 +14,7 @@
 #include <math.h>
 
 // Calibration parameter struct
-#define CAL_POINTS        20
+#define CAL_POINTS        21
 
 typedef struct _pair {
   float real;
@@ -66,7 +66,8 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
     /*17*/ {NAN, NAN},                   \
     /*18*/ {NAN, NAN},                   \
     /*19*/ {NAN, NAN},                   \
-    /*20*/ {NAN, NAN}                    \
+    /*20*/ {NAN, NAN},                   \
+    /*21*/ {NAN, NAN}                    \
   },                                     \
                                          \
   /* height compensation */              \
@@ -91,35 +92,49 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
     /*17*/ {NAN, NAN},                   \
     /*18*/ {NAN, NAN},                   \
     /*19*/ {NAN, NAN},                   \
-    /*20*/ {NAN, NAN}                    \
+    /*20*/ {NAN, NAN},                   \
+    /*21*/ {NAN, NAN}                    \
   },                                     \
-										                     \
-  /* height */                           \
+                                         \
+  /* track height */                     \
+                                         \
+  /* Standard calibration block height */\
+  /* 1: 15.39 mm */                      \
+  /* 2: 20.46 mm */                      \
+  /* 3: 40.47 mm */                      \
+  /* 4: 50.41 mm */                      \
+  /* 5: 75.28 mm */                      \
+  /* 6: 100.57 mm */                     \
+  /* 7: 125.27 mm */                     \
+  /* 8: 150.78 mm */                     \
+  /* 9: 200.08 mm */                     \
+                                         \
   {                                      \
-         /* height, height */            \
-    /* 2*/ {-200.08f, -191.14f},         \
-    /* 1*/ {-150.78f, -143.91f},         \
-    /* 4*/ {-100.57f, -95.77f},          \
-    /* 3*/ {-50.41f, -47.73f},           \
-    /* 2*/ {-20.46f, -19.04f},           \
-    /* 1*/ {0.0f, 0.64f},                \
-    /* 2*/ {20.46f, 20.28f},             \
-    /* 3*/ {50.41f, 48.98f},             \
-    /* 4*/ {100.57f, 97.01f},            \
-    /* 1*/ {150.78f, 145.02f},           \
-    /* 2*/ {200.08f, 192.09f},           \
-    /* 3*/ {NAN, NAN/*-150.78f, NAN*/},  \
-    /* 4*/ {NAN, NAN/*-125.27f, NAN*/},  \
-    /* 5*/ {NAN, NAN/*-100.57f, NAN*/},  \
-    /* 6*/ {NAN, NAN/*-75.28f, NAN*/},   \
-    /* 7*/ {NAN, NAN/*-50.41f, NAN*/},   \
-    /* 8*/ {NAN, NAN/*-40.47f, NAN*/},   \
-    /* 9*/ {NAN, NAN/*-20.46f, NAN*/},   \
-    /*10*/ {NAN, NAN/*-15.39f, NAN*/},   \
-    /*11*/ {NAN, NAN/*0.0f, 0.64f*/},    \
+         /* measured, actual */          \
+    /* 1*/ {-200.08f, -191.14f},         \
+    /* 2*/ {-150.78f, -143.91f},         \
+    /* 3*/ {-100.57f, -95.77f},          \
+    /* 4*/ {-50.41f,  -47.73f},          \
+    /* 5*/ {-20.46f,  -19.04f},          \
+    /* 6*/ {0.0f,     0.64f},            \
+    /* 7*/ {20.46f,   20.28f},           \
+    /* 8*/ {50.41f,   48.98f},           \
+    /* 9*/ {100.57f,  97.01f},           \
+    /*10*/ {150.78f,  145.02f},          \
+    /*11*/ {200.08f,  192.09f},          \
+    /*12*/ {NAN, NAN},                   \
+    /*13*/ {NAN, NAN},                   \
+    /*14*/ {NAN, NAN},                   \
+    /*15*/ {NAN, NAN},                   \
+    /*16*/ {NAN, NAN},                   \
+    /*17*/ {NAN, NAN},                   \
+    /*18*/ {NAN, NAN},                   \
+    /*19*/ {NAN, NAN},                   \
+    /*20*/ {NAN, NAN},                   \
+    /*21*/ {NAN, NAN}                    \
   },                                     \
-										                     \
-  /* distance */                         \
+                                         \
+  /* track distance */                   \
   {                                      \
           /* vol, distance */            \
     /* 1*/ {1445.0f, 0.9470f},           \
@@ -141,7 +156,8 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
     /*17*/ {NAN, NAN},                   \
     /*18*/ {NAN, NAN},                   \
     /*19*/ {NAN, NAN},                   \
-    /*20*/ {NAN, NAN}                    \
+    /*20*/ {NAN, NAN},                   \
+    /*21*/ {NAN, NAN}                    \
   }                                      \
 }
 

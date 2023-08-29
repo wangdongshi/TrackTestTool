@@ -127,7 +127,7 @@ void changeADCData2ActualValue(void)
   float sin_roll;
   float vol[AD7608_CH_NUMBER];
   
-  // ADC data --> voltage (-5V to +5V)
+  // ADC data(18 bit) --> voltage (-5V to +5V)
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
     //vol[i] = (float)((adc[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
     vol[i] = (float)((int32_t)(adc[i] ^ 0x00020000) - (int32_t)0x00020000) * 
