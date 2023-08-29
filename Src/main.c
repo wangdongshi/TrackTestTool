@@ -52,7 +52,6 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN Includes */
-#include <string.h>
 #include <math.h>
 #include "debug.h"
 #include "comm.h"
@@ -97,9 +96,6 @@ osSemaphoreId UserCommandArriveSemHandle;
 TRACK_MEAS_ITEM meas = {0.0f};
 int32_t         adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
 uint8_t         format = OUTPUT_JUSTFLOAT;
-
-extern volatile uint8_t gyro1[GYRO_RX_BUFFER_SIZE];
-extern volatile uint8_t gyro2[GYRO_RX_BUFFER_SIZE];
 
 /* USER CODE END PV */
 
@@ -604,23 +600,13 @@ static void sendData2PC(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   assert_param(huart != &huart2);
-  assert_param(huart != &huart3);
-  assert_param(huart != &huart6);
-  
-  /*
-  volatile uint8_t temp;
   
   if (huart == &huart3) {
-    for (int8_t i = 0; i < GYRO_RX_BUFFER_SIZE; i++) {
-      temp = gyro1[i];
-    }
+    uart3RxCallback();
   }
   else if (huart == &huart6) {
-    for (int8_t i = 0; i < GYRO_RX_BUFFER_SIZE; i++) {
-      temp = gyro2[i];
-    }
+    uart6RxCallback();
   }
-  */
 }
 
 /* USER CODE END 4 */

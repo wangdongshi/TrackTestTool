@@ -11,8 +11,6 @@
 #ifndef __GYRO97B_H__
 #define __GYRO97B_H__
 
-#define GYRO_RX_BUFFER_SIZE     20
-
 void startGyro(void);
 void uart3RxCallback(void);
 void uart6RxCallback(void);

@@ -38,7 +38,6 @@
 
 /* USER CODE BEGIN 0 */
 #include "comm.h"
-#include "gyro97B.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -253,7 +252,7 @@ void USART2_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-  uart3RxCallback();
+  
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   /* USER CODE BEGIN USART3_IRQn 1 */
@@ -309,7 +308,7 @@ void DMA2_Stream1_IRQHandler(void)
 void USART6_IRQHandler(void)
 {
   /* USER CODE BEGIN USART6_IRQn 0 */
-  uart6RxCallback();
+  
   /* USER CODE END USART6_IRQn 0 */
   HAL_UART_IRQHandler(&huart6);
   /* USER CODE BEGIN USART6_IRQn 1 */
