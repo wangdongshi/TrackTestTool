@@ -42,40 +42,8 @@ volatile float gyro_zero_offset[2] = {0.0f, 0.0f};
 volatile uint64_t gyro_count[2] = {0, 0};
 
 /* Private function prototypes -----------------------------------------------*/
-static Status syncGyro1(void);
-static Status syncGyro2(void);
 
 /* Formal function definitions -----------------------------------------------*/
-static Status syncGyro1(void)
-{
-  static uint8_t count = 0;
-  
-  HAL_UART_Receive(&huart3, (uint8_t*)gyro1, GYRO_RX_BUFFER_SIZE, HAL_MAX_DELAY);
-  if (gyro1[0] != GYRO_FIRST_BYTE) {
-    HAL_UART_Receive(&huart3, (uint8_t*)gyro1, count++, HAL_MAX_DELAY);
-    if (count > GYRO_RX_BUFFER_SIZE) return NG;
-    else return syncGyro1();
-  }
-  else {
-    return OK;
-  }
-}
-
-static Status syncGyro2(void)
-{
-  static uint8_t count = 0;
-    
-  HAL_UART_Receive(&huart6, (uint8_t*)gyro2, GYRO_RX_BUFFER_SIZE, HAL_MAX_DELAY);
-  if (gyro1[0] != GYRO_FIRST_BYTE) {
-    HAL_UART_Receive(&huart6, (uint8_t*)gyro2, count++, HAL_MAX_DELAY);
-    if (count > GYRO_RX_BUFFER_SIZE) return NG;
-    else return syncGyro2();
-  }
-  else {
-    return OK;
-  }
-}
-
 void startGyro(void)
 {
   HAL_StatusTypeDef status;
@@ -83,21 +51,11 @@ void startGyro(void)
   meas.omega1 = 0.0f - gyro_zero_offset[0];
   meas.omega2 = 0.0f - gyro_zero_offset[1];
   
-  if (syncGyro1() == OK) {
-    status = HAL_UART_Receive_DMA(&huart3, (uint8_t*)gyro1, GYRO_RX_BUFFER_SIZE);
-    assert_param(status == HAL_OK);
-  }
-  else {
-    PRINTF("Gyroscope1 data synchronization failed!\r\n");
-  }
-  
-  if (syncGyro2() == OK) {
-    status = HAL_UART_Receive_DMA(&huart6, (uint8_t*)gyro2, GYRO_RX_BUFFER_SIZE);
-    assert_param(status == HAL_OK);
-  }
-  else {
-    PRINTF("Gyroscope2 data synchronization failed!\r\n");
-  }
+  status = HAL_UART_Receive_DMA(&huart3, (uint8_t*)gyro1, GYRO_RX_BUFFER_SIZE);
+  assert_param(status == HAL_OK);
+
+  status = HAL_UART_Receive_DMA(&huart6, (uint8_t*)gyro2, GYRO_RX_BUFFER_SIZE);
+  assert_param(status == HAL_OK);
 }
 
 // yaw
