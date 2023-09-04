@@ -623,7 +623,7 @@ void mainTask(void const * argument)
   
   initData();
   startGyro();
-  startEncoder();
+  startEncoder(0.0f);
   startCommunication();
   
   while(1) {

@@ -11,7 +11,8 @@
 #ifndef __ENCODER_H__
 #define __ENCODER_H__
 
-void startEncoder(void);
+void startEncoder(float mileage);
+void stopEncoder(void);
 void encoderCallback(void);
 
 #endif // __ENCODER_H__

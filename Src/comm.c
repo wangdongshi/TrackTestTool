@@ -15,6 +15,7 @@
 #include <string.h>
 #include "cmsis_os.h"
 #include "stm32f4xx_hal_uart.h"
+#include "encoder.h"
 #include "comm.h"
 #include "crc.h"
 
@@ -82,7 +83,8 @@ void commTask(void const * argument)
         meas.mileage = msg.startPoint;
         break;
       case COMM_SET_MILAGE:
-        meas.mileage = msg.startPoint;
+        stopEncoder();
+        startEncoder(msg.startPoint);
         break;
       case COMM_SET_OUTPUT_FORMAT:
         format = msg.outFormat;

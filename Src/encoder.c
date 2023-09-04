@@ -52,15 +52,22 @@ static void initEncoder(void)
   __HAL_TIM_SET_AUTORELOAD(&htim1, counter - 1);
 }
 
-void startEncoder(void)
+void startEncoder(float mileage)
 {
-  meas.mileage = 0.0f;
+  meas.mileage = mileage;
   
   initEncoder();
   
   __HAL_TIM_CLEAR_IT(&htim1, TIM_IT_UPDATE);
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE);
+}
+
+void stopEncoder(void)
+{
+  HAL_TIM_Encoder_Stop(&htim1, TIM_CHANNEL_ALL);
+  __HAL_TIM_CLEAR_IT(&htim1, TIM_IT_UPDATE);
+  __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_UPDATE);
 }
 
 void encoderCallback(void)
