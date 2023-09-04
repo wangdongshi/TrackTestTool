@@ -65,7 +65,11 @@ void uart3RxCallback(void)
   
   // Check leading byte
   if (gyro1[0] != GYRO_FIRST_BYTE) {
+    // Integrate angular velocity by previous omega data
     PRINTF("Gyroscope1 data format is error!\r\n");
+    meas.pitch += meas.omega1 / GYRO_UPDATE_FREQUENCY;
+    if (meas.pitch > CIRCULAR_ANGLE_DEGREE) meas.pitch -= CIRCULAR_ANGLE_DEGREE;
+    gyro_count[0]++;
     return;
   }
     
@@ -100,7 +104,11 @@ void uart6RxCallback(void)
   
   // Check leading byte
   if (gyro1[0] != GYRO_FIRST_BYTE) {
+    // Integrate angular velocity by previous omega data
     PRINTF("Gyroscope2 data format is error!\r\n");
+    meas.yaw += meas.omega2 / GYRO_UPDATE_FREQUENCY;
+    if (meas.yaw > CIRCULAR_ANGLE_DEGREE) meas.yaw -= CIRCULAR_ANGLE_DEGREE;
+    gyro_count[1]++;
     return;
   }
   
