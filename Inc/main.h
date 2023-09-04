@@ -132,8 +132,8 @@ typedef struct _meas {
   float height;
   float height_comp;
   float roll;         // measure by dip sensor
-  float yaw;          // integral by gyro1
-  float pitch;        // integral by gyro2
+  float pitch;        // integral by gyro1
+  float yaw;          // integral by gyro2
   float battery;
   float omega1;       // measure by gyro1
   float omega2;       // measure by gyro2
