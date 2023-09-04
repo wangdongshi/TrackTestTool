@@ -58,7 +58,7 @@ void startGyro(void)
   assert_param(status == HAL_OK);
 }
 
-// yaw
+// pitch
 void uart3RxCallback(void)
 {
   int32_t gyro_24bit;
@@ -87,13 +87,13 @@ void uart3RxCallback(void)
   }
   
   // Integrate angular velocity values into angle values
-  meas.yaw += meas.omega1 / GYRO_UPDATE_FREQUENCY;
-  if (meas.yaw > CIRCULAR_ANGLE_DEGREE) meas.yaw -= CIRCULAR_ANGLE_DEGREE;
+  meas.pitch += meas.omega1 / GYRO_UPDATE_FREQUENCY;
+  if (meas.pitch > CIRCULAR_ANGLE_DEGREE) meas.pitch -= CIRCULAR_ANGLE_DEGREE;
   
   gyro_count[0]++;
 }
 
-// pitch
+// yaw
 void uart6RxCallback(void)
 {
   int32_t gyro_24bit;
@@ -122,8 +122,8 @@ void uart6RxCallback(void)
   }
   
   // Integrate angular velocity values into angle values
-  meas.pitch += meas.omega2 / GYRO_UPDATE_FREQUENCY;
-  if (meas.pitch > CIRCULAR_ANGLE_DEGREE) meas.pitch -= CIRCULAR_ANGLE_DEGREE;
+  meas.yaw += meas.omega2 / GYRO_UPDATE_FREQUENCY;
+  if (meas.yaw > CIRCULAR_ANGLE_DEGREE) meas.yaw -= CIRCULAR_ANGLE_DEGREE;
   
   gyro_count[1]++;
 }
