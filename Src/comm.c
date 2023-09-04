@@ -43,6 +43,7 @@ static uint8_t rxBuffer[COMM_RX_BUFFER_SIZE];
 COMM_MSG command; // It's a shared memory parameter which is protected by mutex.
 
 WORK_MODE workMode = MODE_PRE_WORK;
+TRIG_MODE trigMode = TRIG_CYCLIC;
 GYRO_MODE gyroMode = GYRO_OFFSET_HOLD;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,14 +80,15 @@ void commTask(void const * argument)
       case COMM_CHANGE_TO_NORMAL_MODE:
         workMode = MODE_NORMAL_WORK;
         meas.mileage = msg.startPoint;
-        meas.yaw   = msg.startAngle1;
-        meas.pitch = msg.startAngle2;
         break;
-      case COMM_RESET_MILAGE:
+      case COMM_SET_MILAGE:
         meas.mileage = msg.startPoint;
         break;
-      case COMM_CHANGE_OUTPUT_FORMAT:
+      case COMM_SET_OUTPUT_FORMAT:
         format = msg.outFormat;
+        break;
+      case COMM_SET_TRIGGER_MODE:
+        trigMode = (TRIG_MODE)msg.trigMode;
         break;
       case COMM_REMOVE_GYRO_ZERO_DRIFT:
         gyroMode = (GYRO_MODE)msg.gyroMode;
@@ -136,14 +138,15 @@ void uart2RxCallback(void)
   switch (command.type) {
     case COMM_CHANGE_TO_NORMAL_MODE:
       command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
-      command.startAngle1  = swapFloat(*(float*)(&rxBuffer[8]));
-      command.startAngle2  = swapFloat(*(float*)(&rxBuffer[12]));
       break;
-    case COMM_RESET_MILAGE:
+    case COMM_SET_MILAGE:
       command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
       break;
-    case COMM_CHANGE_OUTPUT_FORMAT:
+    case COMM_SET_OUTPUT_FORMAT:
       command.outFormat = swapUint16(*(uint16_t*)(&rxBuffer[4]));
+      break;
+    case COMM_SET_TRIGGER_MODE:
+      command.trigMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
       break;
     case COMM_REMOVE_GYRO_ZERO_DRIFT:
       command.gyroMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));

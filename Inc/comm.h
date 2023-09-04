@@ -15,8 +15,9 @@
 
 typedef enum {
   COMM_CHANGE_TO_NORMAL_MODE = 0, // change mode from pre-work to work
-  COMM_RESET_MILAGE,
-  COMM_CHANGE_OUTPUT_FORMAT,
+  COMM_SET_MILAGE,
+  COMM_SET_OUTPUT_FORMAT,
+  COMM_SET_TRIGGER_MODE,
   COMM_REMOVE_GYRO_ZERO_DRIFT,
   COMM_NUMBER_MAX
 } COMM_TYPE;
@@ -26,6 +27,11 @@ typedef enum {
   MODE_NORMAL_WORK,
   MODE_NUMBER_MAX
 } WORK_MODE;
+
+typedef enum {
+  TRIG_CYCLIC = 0,
+  TRIG_ENCODER,
+} TRIG_MODE;
 
 typedef enum {
   GYRO_OFFSET_HOLD = 0,
@@ -43,10 +49,9 @@ typedef struct {
   uint32_t  length;
   uint16_t  type;
   float     startPoint;  // Unit : mm
-  float     startAngle1; // gyro1
-  float     startAngle2; // gyro2
   uint16_t  outFormat;
   uint16_t  gyroMode;
+  uint16_t  trigMode;
 } COMM_MSG;
 
 void startCommunication(void);

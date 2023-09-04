@@ -123,6 +123,7 @@ static void  sendData2PC(void);
 
 /* USER CODE BEGIN 0 */
 extern WORK_MODE workMode;
+extern TRIG_MODE trigMode;
 /* USER CODE END 0 */
 
 /**
@@ -626,7 +627,7 @@ void mainTask(void const * argument)
   startCommunication();
   
   while(1) {
-    if (workMode == MODE_NORMAL_WORK) {
+    if (workMode == MODE_NORMAL_WORK && trigMode == TRIG_ENCODER) {
       osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     }
     else {
