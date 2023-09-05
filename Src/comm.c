@@ -31,6 +31,7 @@ extern DMA_HandleTypeDef hdma_usart2_rx;
 
 extern osMutexId UserCommandMutexHandle;
 extern osSemaphoreId UserCommandArriveSemHandle;
+extern osSemaphoreId EncoderArriveSemHandle;
 
 extern TRACK_MEAS_ITEM meas;
 extern volatile float gyro_zero_offset[2];
@@ -85,6 +86,7 @@ void commTask(void const * argument)
       case COMM_SET_MILAGE:
         stopEncoder();
         startEncoder(msg.startPoint);
+        osSemaphoreRelease(EncoderArriveSemHandle);
         break;
       case COMM_SET_OUTPUT_FORMAT:
         format = msg.outFormat;
