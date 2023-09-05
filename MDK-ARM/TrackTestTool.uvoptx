@@ -208,7 +208,7 @@
           <Type>0</Type>
           <LineNumber>87</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134243220</Address>
+          <Address>134243608</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -250,6 +250,11 @@
           <count>5</count>
           <WinNumber>1</WinNumber>
           <ItemText>gyro1</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>rxBuffer</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>

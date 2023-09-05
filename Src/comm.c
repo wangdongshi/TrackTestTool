@@ -54,6 +54,7 @@ static uint32_t swapUint32(uint32_t value);
 static float swapFloat(float value);
 
 static HAL_StatusTypeDef HAL_UART_RX_DMAStop(UART_HandleTypeDef *huart);
+static HAL_StatusTypeDef HAL_UART_RX_Reset(UART_HandleTypeDef *huart, uint8_t *pData);
 
 /* Formal function definitions -----------------------------------------------*/
 void startCommunication(void)
@@ -93,6 +94,7 @@ void commTask(void const * argument)
         break;
       case COMM_SET_TRIGGER_MODE:
         trigMode = (TRIG_MODE)msg.trigMode;
+        if (trigMode == TRIG_CYCLIC) osSemaphoreRelease(EncoderArriveSemHandle);
         break;
       case COMM_REMOVE_GYRO_ZERO_DRIFT:
         gyroMode = (GYRO_MODE)msg.gyroMode;
@@ -125,11 +127,17 @@ void uart2RxCallback(void)
   if(idleFlag == (uint32_t)(RESET)) return; // Only UART2 idle interrupt is handled here.
   
   // Check message content
-  if (((rxBuffer[0] << 8) | rxBuffer[1]) != COMM_LEADING_BYTE) return; // Pre-guide code is error.
+  if (((rxBuffer[0] << 8) | rxBuffer[1]) != COMM_LEADING_BYTE) { // Pre-guide code is error.
+    HAL_UART_RX_Reset(&huart2, rxBuffer);
+    return;
+  }
   uint16_t remainder  = __HAL_DMA_GET_COUNTER(&hdma_usart2_rx);
   uint16_t length     = COMM_RX_BUFFER_SIZE - remainder;
   uint16_t crc16      = swapUint16(calcCRC16(&rxBuffer[2], (length - 4))); // // Add modbus CRC
-  if (crc16 != ((rxBuffer[length - 2] << 8) | rxBuffer[length - 1])) return;
+  if (crc16 != ((rxBuffer[length - 2] << 8) | rxBuffer[length - 1])) {
+    HAL_UART_RX_Reset(&huart2, rxBuffer);
+    return;
+  }
   
   // Stop UART2 RX DMA transfer
   __HAL_UART_CLEAR_IDLEFLAG(&huart2);
@@ -235,8 +243,7 @@ static HAL_StatusTypeDef HAL_UART_RX_DMAStop(UART_HandleTypeDef *huart)
     CLEAR_BIT(huart->Instance->CR3, USART_CR3_DMAR);
 
     /* Abort the UART DMA Rx channel */
-    if(huart->hdmarx != NULL)
-    {
+    if(huart->hdmarx != NULL) {
       HAL_DMA_Abort(huart->hdmarx);
     }
     
@@ -249,4 +256,20 @@ static HAL_StatusTypeDef HAL_UART_RX_DMAStop(UART_HandleTypeDef *huart)
   }
 
   return HAL_OK;
+}
+
+static HAL_StatusTypeDef HAL_UART_RX_Reset(UART_HandleTypeDef *huart, uint8_t *pData)
+{
+  HAL_StatusTypeDef status;
+  
+  // Stop UART2 RX DMA transfer
+  __HAL_UART_CLEAR_IDLEFLAG(huart);
+  HAL_UART_RX_DMAStop(huart);
+  
+  // Recover UART2 RX DMA transfer
+  memset(pData, 0, COMM_RX_BUFFER_SIZE);
+  status = HAL_UART_Receive_DMA(huart, pData, COMM_RX_BUFFER_SIZE);
+  assert_param(status == HAL_OK);
+  
+  return status;
 }
