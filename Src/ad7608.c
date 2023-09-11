@@ -137,7 +137,7 @@ void changeADCData2ActualValue(void)
   meas.distance_comp= vol[TRACK_DIST_COMPENSATION];
   meas.height_comp  = vol[TRACK_HEIGHT];
   meas.distance     = vol[TRACK_DISTANCE];
-  meas.battery      = vol[TRACK_BATTERY_VOLTAGE];
+  meas.battery      = vol[TRACK_BATTERY_VOLTAGE] * 2.0f;
   
   // calculate dip angle and track height
   // Angle = arcsin((E0-Eb)/SF)-Theta
