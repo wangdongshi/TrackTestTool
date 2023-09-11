@@ -94,7 +94,9 @@ void commTask(void const * argument)
         break;
       case COMM_SET_TRIGGER_MODE:
         trigMode = (TRIG_MODE)msg.trigMode;
-        if (trigMode == TRIG_CYCLIC) osSemaphoreRelease(EncoderArriveSemHandle);
+        if (workMode == MODE_NORMAL_WORK && trigMode == TRIG_CYCLIC) {
+          osSemaphoreRelease(EncoderArriveSemHandle);
+        }
         break;
       case COMM_REMOVE_GYRO_ZERO_DRIFT:
         gyroMode = (GYRO_MODE)msg.gyroMode;
