@@ -78,7 +78,7 @@ void adcTask(void const * argument)
 
 void startADC(void)
 {
-  HAL_TIM_Base_Start_IT(&htim7);
+  HAL_TIM_Base_Start_IT(&htim7); // 10ms cyclic timer
 }
 
 static void AD7608_RESET(void)
