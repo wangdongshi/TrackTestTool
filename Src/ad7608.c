@@ -44,6 +44,7 @@
 #define PI                               3.1415926f
 
 /* External Variables --------------------------------------------------------*/
+extern TIM_HandleTypeDef htim7;
 extern SPI_HandleTypeDef hspi1;
 extern osSemaphoreId AdcConvertStartSemHandle;
 extern osSemaphoreId AdcConvertCompleteSemHandle;
@@ -68,10 +69,16 @@ void adcTask(void const * argument)
   
   while(1) {
     osSemaphoreWait(AdcConvertStartSemHandle, osWaitForever);
+    //PRINTF("Timer7 come!\r\n");
     AD7608_TRIGGER();
     while(AD7608_BUSY) {};
     HAL_SPI_Receive_DMA(&hspi1, buff, sizeof(buff));
   }
+}
+
+void startADC(void)
+{
+  HAL_TIM_Base_Start_IT(&htim7);
 }
 
 static void AD7608_RESET(void)

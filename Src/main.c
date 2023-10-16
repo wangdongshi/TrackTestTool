@@ -93,6 +93,8 @@ osSemaphoreId UserCommandArriveSemHandle;
 /* Private structs -----------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim7;
+
 TRACK_MEAS_ITEM meas = {0.0f};
 int32_t         adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
 uint8_t         format = OUTPUT_JUSTFLOAT;
@@ -117,8 +119,9 @@ void monitorTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-static void  prepareSensorData(void);
-static void  sendData2PC(void);
+static void MX_TIM7_Init(void);
+static void prepareSensorData(void);
+static void sendData2PC(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -163,7 +166,7 @@ int main(void)
   MX_USART6_UART_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-
+  MX_TIM7_Init();
   /* USER CODE END 2 */
 
   /* Create the mutex(es) */
@@ -558,6 +561,38 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void MX_TIM7_Init(void)
+{
+
+  /* USER CODE BEGIN TIM7_Init 0 */
+
+  /* USER CODE END TIM7_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM7_Init 1 */
+
+  /* USER CODE END TIM7_Init 1 */
+  htim7.Instance = TIM7;
+  htim7.Init.Prescaler = 16800 - 1;
+  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim7.Init.Period = 100 - 1;
+  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM7_Init 2 */
+
+  /* USER CODE END TIM7_Init 2 */
+
+}
+
 static void initData(void)
 {
   meas.sequence = 0;
@@ -623,6 +658,7 @@ void mainTask(void const * argument)
   
   initData();
   startGyro();
+  startADC();
   startEncoder(0.0f);
   startCommunication();
   
@@ -633,7 +669,7 @@ void mainTask(void const * argument)
     else {
       osDelay(500);
     }
-    osSemaphoreRelease(AdcConvertStartSemHandle);
+    //osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
     changeADCData2ActualValue();
@@ -711,6 +747,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 1 */
   if (htim->Instance == TIM1) {
     encoderCallback();
+  }
+  else if (htim->Instance == TIM7) {
+    osSemaphoreRelease(AdcConvertStartSemHandle);
   }
   /* USER CODE END Callback 1 */
 }

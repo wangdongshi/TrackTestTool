@@ -38,6 +38,8 @@
 
 /* USER CODE BEGIN 0 */
 #include "comm.h"
+
+extern TIM_HandleTypeDef htim7;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -317,6 +319,18 @@ void USART6_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+/**
+  * @brief This function handles TIM7 global interrupt.
+  */
+void TIM7_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM7_IRQn 0 */
 
+  /* USER CODE END TIM7_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim7);
+  /* USER CODE BEGIN TIM7_IRQn 1 */
+
+  /* USER CODE END TIM7_IRQn 1 */
+}
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
