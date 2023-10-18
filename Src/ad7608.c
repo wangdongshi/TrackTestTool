@@ -29,7 +29,6 @@
  */
 
 /* Private macro definition */
-#define AD7608_CH_NUMBER            8
 #define AD7608_CH_DATA_RESOLUTION   18
 #define AD7608_DMA_BUFFER_LENGTH    (AD7608_CH_NUMBER * AD7608_CH_DATA_RESOLUTION / 8)
 #define AD7608_CONVSTA_H   LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_4)
@@ -59,10 +58,10 @@ extern WORK_MODE workMode;
 const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
 static uint8_t buff[AD7608_DMA_BUFFER_LENGTH];
 
-static int32_t adcCnt = 0; // Max. 124 days
-static int32_t filteredADC[AD7608_CH_NUMBER]; // filtered ADC data (length = 18 bit)
+int32_t filteredADC[AD7608_CH_NUMBER]; // filtered ADC data (length = 18 bit)
 static int32_t rawADCValue[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
 static int32_t filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_DEPTH]; // ADC filter data buffer
+static int32_t adcCnt = 0; // Max. 124 days
 
 /* Private function prototypes -----------------------------------------------*/
 static void AD7608_RESET(void);

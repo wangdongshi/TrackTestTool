@@ -126,6 +126,8 @@ static void sendData2PC(void);
 /* USER CODE BEGIN 0 */
 extern WORK_MODE workMode;
 extern TRIG_MODE trigMode;
+extern DATA_MODE dataMode;
+extern int32_t filteredADC[AD7608_CH_NUMBER];
 /* USER CODE END 0 */
 
 /**
@@ -605,30 +607,50 @@ static void prepareSensorData(void)
 static void sendData2PC(void)
 {
   if(format == OUTPUT_JUSTFLOAT) {
-    // In normal mode, the data can be confirmed by VOFA+ JustFloat engine.
-    unsigned short length = sizeof(meas) / sizeof(float);
-    TRACEFLOAT((float*)&meas, length);
-    /* Here, all the information to be output needs to be concentrated in one 
-     * PRINTF2 statement for output, so that the highest efficiency can be obtained. 
-     * Because PRINTF2 is sent by DMA, and the buffer is 200 bytes.
-     */
+    if (dataMode == DATA_MEASURE) {
+      // In normal mode, the data can be confirmed by VOFA+ JustFloat engine.
+      unsigned short length = sizeof(meas) / sizeof(float);
+      TRACEFLOAT((float*)&meas, length);
+      /* Here, all the information to be output needs to be concentrated in one 
+       * PRINTF2 statement for output, so that the highest efficiency can be obtained. 
+       * Because PRINTF2 is sent by DMA, and the buffer is 200 bytes.
+       */
+    }
+    else {
+      unsigned short length = sizeof(filteredADC) / sizeof(float);
+      TRACEFLOAT((float*)&filteredADC, length);
+    }
   }
   else if (format == OUTPUT_FIREWATER) {
-    // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-    PRINTF2("DATA : %.3f, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %.4f, %.2f, %.4f, %.4f, %ld\r\n",
-            meas.mileage,
-            meas.distance,
-            meas.distance_comp,
-            meas.height,
-            meas.height_comp,
-            meas.roll,
-            meas.pitch,
-            meas.yaw,
-            meas.battery,
-            meas.omega1,
-            meas.omega2,
-            meas.sequence
-    );
+    if (dataMode == DATA_MEASURE) {
+      // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
+      PRINTF2("DATA : %.3f, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %.4f, %.2f, %.4f, %.4f, %ld\r\n",
+              meas.mileage,
+              meas.distance,
+              meas.distance_comp,
+              meas.height,
+              meas.height_comp,
+              meas.roll,
+              meas.pitch,
+              meas.yaw,
+              meas.battery,
+              meas.omega1,
+              meas.omega2,
+              meas.sequence
+      );
+    }
+    else {
+      PRINTF2("DATA : %d, %d, %d, %d, %d, %d, %d, %d\r\n",
+              filteredADC[0],
+              filteredADC[1],
+              filteredADC[2],
+              filteredADC[3],
+              filteredADC[4],
+              filteredADC[5],
+              filteredADC[6],
+              filteredADC[7]
+      );
+    }
   }
 }
 

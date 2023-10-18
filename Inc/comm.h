@@ -19,6 +19,7 @@ typedef enum {
   COMM_SET_OUTPUT_FORMAT,
   COMM_SET_TRIGGER_MODE,
   COMM_REMOVE_GYRO_ZERO_DRIFT,
+  COMM_SET_OUTPUT_DATA_MODE,
   COMM_NUMBER_MAX
 } COMM_TYPE;
 
@@ -40,6 +41,12 @@ typedef enum {
 } GYRO_MODE;
 
 typedef enum {
+  DATA_MEASURE = 0,
+  DATA_ADC_RAW,
+  DATA_MODE_NUMBER_MAX
+} DATA_MODE;
+
+typedef enum {
   OUTPUT_JUSTFLOAT = 0,
   OUTPUT_FIREWATER,
   OUTPUT_NUMBER_MAX
@@ -52,6 +59,7 @@ typedef struct {
   uint16_t  outFormat;
   uint16_t  gyroMode;
   uint16_t  trigMode;
+  uint16_t  dataMode;
 } COMM_MSG;
 
 void startCommunication(void);

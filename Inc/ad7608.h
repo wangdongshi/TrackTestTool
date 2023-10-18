@@ -11,6 +11,8 @@
 #ifndef __ADC7608_H__
 #define __ADC7608_H__
 
+#define AD7608_CH_NUMBER 8
+
 typedef enum {
   TRACK_DIST_COMPENSATION = 0,
   TRACK_HEIGHT,

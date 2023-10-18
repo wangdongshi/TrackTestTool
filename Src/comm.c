@@ -15,6 +15,7 @@
 #include <string.h>
 #include "cmsis_os.h"
 #include "stm32f4xx_hal_uart.h"
+#include "ad7608.h"
 #include "encoder.h"
 #include "comm.h"
 #include "crc.h"
@@ -47,6 +48,7 @@ COMM_MSG command; // It's a shared memory parameter which is protected by mutex.
 WORK_MODE workMode = MODE_PRE_WORK;
 TRIG_MODE trigMode = TRIG_CYCLIC;
 GYRO_MODE gyroMode = GYRO_OFFSET_HOLD;
+DATA_MODE dataMode = DATA_MEASURE;
 
 /* Private function prototypes -----------------------------------------------*/
 static uint16_t swapUint16(uint16_t value);
@@ -83,6 +85,7 @@ void commTask(void const * argument)
       case COMM_CHANGE_TO_NORMAL_MODE:
         workMode = MODE_NORMAL_WORK;
         meas.mileage = msg.startPoint;
+        clearADCFilterData();
         break;
       case COMM_SET_MILAGE:
         stopEncoder();
@@ -110,6 +113,10 @@ void commTask(void const * argument)
           meas.yaw = 0.0f;
           meas.pitch = 0.0f;
         }
+        break;
+      case COMM_SET_OUTPUT_DATA_MODE:
+        dataMode = (DATA_MODE)msg.dataMode;
+        clearADCFilterData();
         break;
       default:
         break;
@@ -164,6 +171,9 @@ void uart2RxCallback(void)
       break;
     case COMM_REMOVE_GYRO_ZERO_DRIFT:
       command.gyroMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
+      break;
+    case COMM_SET_OUTPUT_DATA_MODE:
+      command.dataMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
       break;
     default:
       break;
