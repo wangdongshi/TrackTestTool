@@ -48,6 +48,7 @@
 /* External Variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim7;
 extern SPI_HandleTypeDef hspi1;
+extern osMutexId UserCommandMutexHandle;
 extern osSemaphoreId AdcConvertStartSemHandle;
 extern osSemaphoreId AdcConvertCompleteSemHandle;
 //extern uint32_t adc[AD7608_CH_NUMBER];
@@ -121,7 +122,9 @@ void clearADCFilterData(void)
     for (uint32_t j = 0; j < ADC_FILTER_DEPTH; j++) {
       filterBuffer[i][j] = 0;
     }
+    osMutexWait(UserCommandMutexHandle, osWaitForever);
     filteredADC[i] = 0;
+    osMutexRelease(UserCommandMutexHandle);
   }
 }
 
@@ -180,6 +183,7 @@ static void filterADCData(void)
 {
   assert_param(adcCnt != 0);
   
+  osMutexWait(UserCommandMutexHandle, osWaitForever);
 #if 0
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
     filteredADC[i] = rawADCValue[i];
@@ -195,6 +199,7 @@ static void filterADCData(void)
     }
   }
 #endif
+  osMutexRelease(UserCommandMutexHandle);
 }
 
 void changeADCData2ActualValue(void)
@@ -202,12 +207,14 @@ void changeADCData2ActualValue(void)
   float sinRoll;
   float vol[AD7608_CH_NUMBER];
   
+  osMutexWait(UserCommandMutexHandle, osWaitForever);
   // ADC data(18 bit) --> voltage (-5V to +5V)
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
     //vol[i] = (float)((filteredADC[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
     vol[i] = (float)((int32_t)(filteredADC[i] ^ 0x00020000) - (int32_t)0x00020000) * 
              ADC_VOLTAGE_TRANSFER_FACTOR;
   }
+  osMutexRelease(UserCommandMutexHandle);
   
   meas.distance_comp= vol[TRACK_DIST_COMPENSATION];
   meas.height_comp  = vol[TRACK_HEIGHT];
