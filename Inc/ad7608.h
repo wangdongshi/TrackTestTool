@@ -11,8 +11,6 @@
 #ifndef __ADC7608_H__
 #define __ADC7608_H__
 
-#define AD7608_CH_NUMBER  8
-
 typedef enum {
   TRACK_DIST_COMPENSATION = 0,
   TRACK_HEIGHT,
@@ -26,6 +24,7 @@ typedef enum {
 
 void ADC_Task(void const * argument);
 void startADC(void);
+void clearADCFilterData(void);
 void changeADCData2ActualValue(void);
 
 #endif // __ADC7608_H__

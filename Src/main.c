@@ -96,7 +96,6 @@ osSemaphoreId UserCommandArriveSemHandle;
 TIM_HandleTypeDef htim7;
 
 TRACK_MEAS_ITEM meas = {0.0f};
-int32_t         adc[AD7608_CH_NUMBER]; // ADC raw data (length = 18 bit)
 uint8_t         format = OUTPUT_JUSTFLOAT;
 
 /* USER CODE END PV */
@@ -576,7 +575,7 @@ static void MX_TIM7_Init(void)
   htim7.Instance = TIM7;
   htim7.Init.Prescaler = 16800 - 1;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 100 - 1;
+  htim7.Init.Period = 50 - 1; // 5ms
   if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
   {
     Error_Handler();
@@ -671,7 +670,7 @@ void mainTask(void const * argument)
     }
     //osSemaphoreRelease(AdcConvertStartSemHandle);
     prepareSensorData();
-    osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
+    //osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
     changeADCData2ActualValue();
     sendData2PC();
   }
