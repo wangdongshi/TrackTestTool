@@ -251,8 +251,8 @@ void prepareSensorData(void)
   
   // set normal valtage item
   osMutexWait(UserCommandMutexHandle, osWaitForever);
-  meas.distance_comp= filteredVol[TRACK_DIST_COMPENSATION];
-  meas.height_comp  = filteredVol[TRACK_HEIGHT];
+  meas.distance_comp= filteredVol[TRACK_DIST_COMP];
+  meas.height_comp  = filteredVol[TRACK_HEIGHT_COMP];
   meas.distance     = filteredVol[TRACK_DISTANCE];
   meas.battery      = filteredVol[TRACK_BATTERY_VOLTAGE] * 2.0f;
   
