@@ -10,6 +10,7 @@
  **********************************************************************/
  
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
 #include "debug.h"
 #include "stm32f4xx_hal.h"
 #include "cmsis_os.h"
@@ -50,24 +51,26 @@ extern SPI_HandleTypeDef hspi1;
 extern osMutexId UserCommandMutexHandle;
 extern osSemaphoreId AdcConvertStartSemHandle;
 extern osSemaphoreId AdcConvertCompleteSemHandle;
-//extern uint32_t adc[AD7608_CH_NUMBER];
 extern TRACK_MEAS_ITEM meas;
 extern WORK_MODE workMode;
+extern DATA_MODE dataMode;
+extern FILTER_MODE filterSW;
 
 /* Private Variables ---------------------------------------------------------*/
 const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
 static uint8_t buff[AD7608_DMA_BUFFER_LENGTH];
 
-int32_t filteredADC[AD7608_CH_NUMBER]; // filtered ADC data (length = 18 bit)
-static int32_t rawADCValue[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
-static int32_t filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_DEPTH]; // ADC filter data buffer
-static int32_t adcCnt = 0; // Max. 124 days
+float outputADVal[AD7608_CH_NUMBER]; // channel data for print to VOFA+
+static int32_t adc[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
+static float filteredVol[AD7608_CH_NUMBER]; // filtered ADC data (length = 18 bit)
+static float filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_DEPTH]; // ADC filter data buffer
+//static int32_t adcCnt = 0; // Max. 124 days
 
 /* Private function prototypes -----------------------------------------------*/
 static void AD7608_RESET(void);
 static void AD7608_TRIGGER(void);
 static void Delay(uint32_t nCount);
-static void filterADCData(void);
+static void filterVoltage(void);
 static float calibrateADCData(ADC_CAL item, float raw);
 
 /* Formal function definitions -----------------------------------------------*/
@@ -100,7 +103,7 @@ void adcTask(void const * argument)
     HAL_SPI_Receive_DMA(&hspi1, buff, sizeof(buff));
     osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
       
-    filterADCData();
+    filterVoltage();
   }
 }
 
@@ -115,14 +118,14 @@ void startADC(void)
 
 void clearADCFilterData(void)
 {
-  adcCnt = 0;
+  //adcCnt = 0;
   
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
     for (uint32_t j = 0; j < ADC_FILTER_DEPTH; j++) {
-      filterBuffer[i][j] = 0;
+      filterBuffer[i][j] = 0.0f;
     }
     osMutexWait(UserCommandMutexHandle, osWaitForever);
-    filteredADC[i] = 0;
+    filteredVol[i] = 0.0f;
     osMutexRelease(UserCommandMutexHandle);
   }
 }
@@ -149,17 +152,17 @@ static void Delay(uint32_t nCount)
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-  adcCnt++;
+  //adcCnt++;
   
   // Map the ADC data from DMA buffer
-  rawADCValue[0] = ((buff[ 0] & 0xFF) << 10) + (buff[ 1] << 2) + (buff[ 2] >> 6);
-  rawADCValue[1] = ((buff[ 2] & 0x3F) << 12) + (buff[ 3] << 4) + (buff[ 4] >> 4);
-  rawADCValue[2] = ((buff[ 4] & 0x0F) << 14) + (buff[ 5] << 6) + (buff[ 6] >> 2);
-  rawADCValue[3] = ((buff[ 6] & 0x03) << 16) + (buff[ 7] << 8) + (buff[ 8] >> 0);
-  rawADCValue[4] = ((buff[ 9] & 0xFF) << 10) + (buff[10] << 2) + (buff[11] >> 6);
-  rawADCValue[5] = ((buff[11] & 0x3F) << 12) + (buff[12] << 4) + (buff[13] >> 4);
-  rawADCValue[6] = ((buff[13] & 0x0F) << 14) + (buff[14] << 6) + (buff[15] >> 2);
-  rawADCValue[7] = ((buff[15] & 0x03) << 16) + (buff[16] << 8) + (buff[17] >> 0);
+  adc[0] = ((buff[ 0] & 0xFF) << 10) + (buff[ 1] << 2) + (buff[ 2] >> 6);
+  adc[1] = ((buff[ 2] & 0x3F) << 12) + (buff[ 3] << 4) + (buff[ 4] >> 4);
+  adc[2] = ((buff[ 4] & 0x0F) << 14) + (buff[ 5] << 6) + (buff[ 6] >> 2);
+  adc[3] = ((buff[ 6] & 0x03) << 16) + (buff[ 7] << 8) + (buff[ 8] >> 0);
+  adc[4] = ((buff[ 9] & 0xFF) << 10) + (buff[10] << 2) + (buff[11] >> 6);
+  adc[5] = ((buff[11] & 0x3F) << 12) + (buff[12] << 4) + (buff[13] >> 4);
+  adc[6] = ((buff[13] & 0x0F) << 14) + (buff[14] << 6) + (buff[15] >> 2);
+  adc[7] = ((buff[15] & 0x03) << 16) + (buff[16] << 8) + (buff[17] >> 0);
   
 #if 0
   // Print debug info (raw DMA data)
@@ -178,52 +181,86 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
   osSemaphoreRelease(AdcConvertCompleteSemHandle);
 }
 
-static void filterADCData(void)
+static void filterVoltage(void)
 {
-  assert_param(adcCnt != 0);
-  
-  osMutexWait(UserCommandMutexHandle, osWaitForever);
-#if 0
-  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
-    filteredADC[i] = rawADCValue[i];
-  }
-#else
-  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
-    //filterBuffer[i][adcCnt % ADC_FILTER_DEPTH] = rawADCValue[i];
-    if (adcCnt >= ADC_FILTER_DEPTH) {
-      filteredADC[i] = (rawADCValue[i] + filteredADC[i] * (ADC_FILTER_DEPTH - 1)) / ADC_FILTER_DEPTH;
-    }
-    else {
-      filteredADC[i] = (rawADCValue[i] + filteredADC[i] * (adcCnt - 1)) / adcCnt;
-    }
-  }
-#endif
-  osMutexRelease(UserCommandMutexHandle);
-}
-
-void changeADCData2ActualValue(void)
-{
-  float sinRoll;
   float vol[AD7608_CH_NUMBER];
   
-  osMutexWait(UserCommandMutexHandle, osWaitForever);
+  //assert_param(adcCnt != 0);
+  
   // ADC data(18 bit) --> voltage (-5V to +5V)
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
     //vol[i] = (float)((filteredADC[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
-    vol[i] = (float)((int32_t)(filteredADC[i] ^ 0x00020000) - (int32_t)0x00020000) * 
+    vol[i] = (float)((int32_t)(adc[i] ^ 0x00020000) - (int32_t)0x00020000) * 
              ADC_VOLTAGE_TRANSFER_FACTOR;
+  }
+  
+  // copy voltage value
+  osMutexWait(UserCommandMutexHandle, osWaitForever);
+  if (filterSW == FILTER_SOFT_ON) { // execute filter (64-bit moving average)
+    for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
+      // TODO : If other types of filters are used, past ADC sample values 
+      //        need to be calculated together, and a certain length of 
+      //        old sample values need to be cached. 
+      //        Because a simple algorithm of moving average is used here, 
+      //        past sample values are not cached for the time being.
+      //filterBuffer[i][adcCnt % ADC_FILTER_DEPTH] = vol[i];
+      
+      // TODO : The filtering depth is 64, the ADC sampling time is 5ms, 
+      //        and the impact of old data within 1 second is negligible. 
+      //        Therefore, no special processing is done here for 
+      //        the first 64 zero values.
+      /*
+      if (adcCnt >= ADC_FILTER_DEPTH) {
+        filteredVol[i] = (vol[i] + filteredVol[i] * (ADC_FILTER_DEPTH - 1)) / ADC_FILTER_DEPTH;
+      }
+      else {
+        filteredVol[i] = (vol[i] + filteredVol[i] * (adcCnt - 1)) / adcCnt;
+      }
+      */
+      filteredVol[i] = (vol[i] + filteredVol[i] * (ADC_FILTER_DEPTH - 1)) / ADC_FILTER_DEPTH;
+    }
+  }
+  else if (filterSW == FILTER_SOFT_OFF) { // do not execute filter
+    memcpy((void*)filteredVol, (void*)vol, sizeof(vol));
   }
   osMutexRelease(UserCommandMutexHandle);
   
-  meas.distance_comp= vol[TRACK_DIST_COMPENSATION];
-  meas.height_comp  = vol[TRACK_HEIGHT];
-  meas.distance     = vol[TRACK_DISTANCE];
-  meas.battery      = vol[TRACK_BATTERY_VOLTAGE] * 2.0f;
+  // copy data to print buffer
+  switch (dataMode) {
+    case DATA_ADC_RAW:
+      memcpy((void*)outputADVal, (void*)adc, sizeof(adc));
+      break;
+    case DATA_VOL_RAW:
+      memcpy((void*)outputADVal, (void*)vol, sizeof(vol));
+      break;
+    case DATA_VOL_FILTERED:
+    default:
+      memcpy((void*)outputADVal, (void*)filteredVol, sizeof(filteredVol));
+      break;
+  }
+}
+
+// This function only processes the data of the analog sensor part. 
+// For the gyroscope, because it is a digital sensor, and its 
+// transformation value are closely related to the number of interruptions,
+// so the conversion processing of the gyroscope data has been processed 
+// in the serial port interrupt of the gyroscope.
+void prepareSensorData(void)
+{
+  float sinRoll;
+  
+  // set normal valtage item
+  osMutexWait(UserCommandMutexHandle, osWaitForever);
+  meas.distance_comp= filteredVol[TRACK_DIST_COMPENSATION];
+  meas.height_comp  = filteredVol[TRACK_HEIGHT];
+  meas.distance     = filteredVol[TRACK_DISTANCE];
+  meas.battery      = filteredVol[TRACK_BATTERY_VOLTAGE] * 2.0f;
   
   // calculate dip angle and track height
   // Angle = arcsin((E0-Eb)/SF)-Theta
-  sinRoll = (vol[TRACK_DIP_A1] - vol[TRACK_DIP_0] - INERTIAL_SENSOR_ZERO_OUTPUT) /
-              TILT_SCALE_FACTOR;
+  sinRoll = (filteredVol[TRACK_DIP_A1] - filteredVol[TRACK_DIP_0] - 
+             INERTIAL_SENSOR_ZERO_OUTPUT) / TILT_SCALE_FACTOR;
+  osMutexRelease(UserCommandMutexHandle);
   if (sinRoll > +1.0f) sinRoll = +1.0f;
   if (sinRoll < -1.0f) sinRoll = -1.0f;
   meas.roll = asin(sinRoll) * CIRCULAR_ANGLE_DEGREE / (2.0f * PI) - 

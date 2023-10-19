@@ -119,7 +119,6 @@ void monitorTask(void const * argument);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 static void MX_TIM7_Init(void);
-static void prepareSensorData(void);
 static void sendData2PC(void);
 /* USER CODE END PFP */
 
@@ -127,7 +126,7 @@ static void sendData2PC(void);
 extern WORK_MODE workMode;
 extern TRIG_MODE trigMode;
 extern DATA_MODE dataMode;
-extern int32_t filteredADC[AD7608_CH_NUMBER];
+extern float outputADVal[AD7608_CH_NUMBER];
 /* USER CODE END 0 */
 
 /**
@@ -599,11 +598,6 @@ static void initData(void)
   meas.sequence = 0;
 }
 
-static void prepareSensorData(void)
-{
-  meas.sequence++;
-}
-
 static void sendData2PC(void)
 {
   if(format == OUTPUT_JUSTFLOAT) {
@@ -617,8 +611,8 @@ static void sendData2PC(void)
        */
     }
     else {
-      unsigned short length = sizeof(filteredADC) / sizeof(float);
-      TRACEFLOAT((float*)&filteredADC, length);
+      unsigned short length = sizeof(outputADVal) / sizeof(float);
+      TRACEFLOAT((float*)&outputADVal, length);
     }
   }
   else if (format == OUTPUT_FIREWATER) {
@@ -639,16 +633,28 @@ static void sendData2PC(void)
               meas.sequence
       );
     }
-    else {
+    else if (dataMode == DATA_ADC_RAW) {
       PRINTF2("DATA : %d, %d, %d, %d, %d, %d, %d, %d\r\n",
-              filteredADC[0],
-              filteredADC[1],
-              filteredADC[2],
-              filteredADC[3],
-              filteredADC[4],
-              filteredADC[5],
-              filteredADC[6],
-              filteredADC[7]
+              *(int32_t*)(&outputADVal[0]),
+              *(int32_t*)(&outputADVal[1]),
+              *(int32_t*)(&outputADVal[2]),
+              *(int32_t*)(&outputADVal[3]),
+              *(int32_t*)(&outputADVal[4]),
+              *(int32_t*)(&outputADVal[5]),
+              *(int32_t*)(&outputADVal[6]),
+              *(int32_t*)(&outputADVal[7])
+      );
+    }
+    else {
+      PRINTF2("DATA : %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f\r\n",
+              outputADVal[0],
+              outputADVal[1],
+              outputADVal[2],
+              outputADVal[3],
+              outputADVal[4],
+              outputADVal[5],
+              outputADVal[6],
+              outputADVal[7]
       );
     }
   }
@@ -690,10 +696,8 @@ void mainTask(void const * argument)
     else {
       osDelay(500);
     }
-    //osSemaphoreRelease(AdcConvertStartSemHandle);
+    meas.sequence++;
     prepareSensorData();
-    //osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
-    changeADCData2ActualValue();
     sendData2PC();
   }
   

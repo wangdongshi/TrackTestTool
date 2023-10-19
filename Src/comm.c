@@ -49,6 +49,7 @@ WORK_MODE workMode = MODE_PRE_WORK;
 TRIG_MODE trigMode = TRIG_CYCLIC;
 GYRO_MODE gyroMode = GYRO_OFFSET_HOLD;
 DATA_MODE dataMode = DATA_MEASURE;
+FILTER_MODE filterSW = FILTER_SOFT_ON;
 
 /* Private function prototypes -----------------------------------------------*/
 static uint16_t swapUint16(uint16_t value);
@@ -92,7 +93,7 @@ void commTask(void const * argument)
         startEncoder(msg.startPoint);
         osSemaphoreRelease(EncoderArriveSemHandle);
         break;
-      case COMM_SET_OUTPUT_FORMAT:
+      case COMM_SET_DISPLAY_MODE:
         format = msg.outFormat;
         break;
       case COMM_SET_TRIGGER_MODE:
@@ -101,7 +102,7 @@ void commTask(void const * argument)
           osSemaphoreRelease(EncoderArriveSemHandle);
         }
         break;
-      case COMM_REMOVE_GYRO_ZERO_DRIFT:
+      case COMM_SET_GYRO_ZERO_DRIFT_MODE:
         gyroMode = (GYRO_MODE)msg.gyroMode;
         if (gyroMode == GYRO_OFFSET_HOLD) {
           gyro_zero_offset[0] = 0.0f;
@@ -114,9 +115,12 @@ void commTask(void const * argument)
           meas.pitch = 0.0f;
         }
         break;
-      case COMM_SET_OUTPUT_DATA_MODE:
+      case COMM_SET_OUTPUT_ADC_DATA_MODE:
         dataMode = (DATA_MODE)msg.dataMode;
         clearADCFilterData();
+        break;
+      case COMM_SET_FILTER_MODE:
+        filterSW = (FILTER_MODE)msg.filterSW;
         break;
       default:
         break;
@@ -163,17 +167,20 @@ void uart2RxCallback(void)
     case COMM_SET_MILAGE:
       command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
       break;
-    case COMM_SET_OUTPUT_FORMAT:
+    case COMM_SET_DISPLAY_MODE:
       command.outFormat = swapUint16(*(uint16_t*)(&rxBuffer[4]));
       break;
     case COMM_SET_TRIGGER_MODE:
       command.trigMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
       break;
-    case COMM_REMOVE_GYRO_ZERO_DRIFT:
+    case COMM_SET_GYRO_ZERO_DRIFT_MODE:
       command.gyroMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
       break;
-    case COMM_SET_OUTPUT_DATA_MODE:
+    case COMM_SET_OUTPUT_ADC_DATA_MODE:
       command.dataMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
+      break;
+    case COMM_SET_FILTER_MODE:
+      command.filterSW = swapUint16(*(uint16_t*)(&rxBuffer[4]));
       break;
     default:
       break;
