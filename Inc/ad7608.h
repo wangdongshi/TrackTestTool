@@ -26,7 +26,7 @@ typedef enum {
 
 void ADC_Task(void const * argument);
 void startADC(void);
-void clearADCFilterData(void);
+void initFilter(void);
 void prepareSensorData(void);
 
 #endif // __ADC7608_H__

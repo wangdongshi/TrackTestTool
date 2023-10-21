@@ -38,7 +38,7 @@
 #define AD7608_RESET_L   LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7)
 #define AD7608_BUSY       LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_5)
 
-#define ADC_FILTER_DEPTH                 64
+#define ADC_FILTER_MAX_DEPTH             64
 #define ADC_VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
 #define INERTIAL_SENSOR_ZERO_OUTPUT      2.50f              // 2.47 to 2.53
 #define CIRCULAR_ANGLE_DEGREE            360.0f             // Unit : degree
@@ -54,17 +54,16 @@ extern osSemaphoreId AdcConvertCompleteSemHandle;
 extern TRACK_MEAS_ITEM meas;
 extern WORK_MODE workMode;
 extern DATA_MODE dataMode;
-extern FILTER_MODE filterSW;
 
 /* Private Variables ---------------------------------------------------------*/
 const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
 static uint8_t buff[AD7608_DMA_BUFFER_LENGTH];
 
+uint16_t filterDeepth = 0;
 float outputADVal[AD7608_CH_NUMBER]; // channel data for print to VOFA+
 static int32_t adc[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
 static float filteredVol[AD7608_CH_NUMBER]; // filtered ADC data (length = 18 bit)
-static float filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_DEPTH]; // ADC filter data buffer
-//static int32_t adcCnt = 0; // Max. 124 days
+
 
 /* Private function prototypes -----------------------------------------------*/
 static void AD7608_RESET(void);
@@ -109,25 +108,9 @@ void adcTask(void const * argument)
 
 void startADC(void)
 {
-  (void)filterBuffer; // delete compile warning
-  
-  clearADCFilterData();
+  initFilter();
   
   HAL_TIM_Base_Start_IT(&htim7); // start 5ms cyclic timer
-}
-
-void clearADCFilterData(void)
-{
-  //adcCnt = 0;
-  
-  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
-    for (uint32_t j = 0; j < ADC_FILTER_DEPTH; j++) {
-      filterBuffer[i][j] = 0.0f;
-    }
-    osMutexWait(ADCSamplingMutexHandle, osWaitForever);
-    filteredVol[i] = 0.0f;
-    osMutexRelease(ADCSamplingMutexHandle);
-  }
 }
 
 static void AD7608_RESET(void)
@@ -181,11 +164,42 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
   osSemaphoreRelease(AdcConvertCompleteSemHandle);
 }
 
+// 
+static int32_t filterIndex = -1;
+static float filterSum[AD7608_CH_NUMBER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+static float filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_MAX_DEPTH]; // ADC filter data buffer
+void initFilter(void)
+{
+  filterIndex = -1;
+  for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) filterSum[i] = 0.0f;
+}
+
+static void movingAverageFilter(const float* xn, float* yn)
+{
+  if(filterIndex == -1) { // init moving verage filter
+    for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
+      for(uint16_t j = 0; j < filterDeepth; j++) {
+        filterBuffer[i][j] = xn[i];
+      }
+      filterSum[i] = xn[i] * filterDeepth;
+    }
+    filterIndex = 0;
+  }
+  else {
+    for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
+      filterSum[i] -= filterBuffer[i][filterIndex];
+      filterBuffer[i][filterIndex] = xn[i];
+      filterSum[i] += xn[i];
+      yn[i] = filterSum[i] / filterDeepth;
+    }
+    filterIndex++;
+    if (filterIndex >= filterDeepth) filterIndex = 0;
+  }
+}
+
 static void filterVoltage(void)
 {
   float vol[AD7608_CH_NUMBER];
-  
-  //assert_param(adcCnt != 0);
   
   // ADC data(18 bit) --> voltage (-5V to +5V)
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
@@ -196,31 +210,15 @@ static void filterVoltage(void)
   
   // copy voltage value
   osMutexWait(ADCSamplingMutexHandle, osWaitForever);
-  if (filterSW == FILTER_SOFT_ON) { // execute filter (64-bit moving average)
-    for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
-      // TODO : If other types of filters are used, past ADC sample values 
-      //        need to be calculated together, and a certain length of 
-      //        old sample values need to be cached. 
-      //        Because a simple algorithm of moving average is used here, 
-      //        past sample values are not cached for the time being.
-      //filterBuffer[i][adcCnt % ADC_FILTER_DEPTH] = vol[i];
-      
-      // TODO : The filtering depth is 64, the ADC sampling time is 5ms, 
-      //        and the impact of old data within 1 second is negligible. 
-      //        Therefore, no special processing is done here for 
-      //        the first 64 zero values.
-      /*
-      if (adcCnt >= ADC_FILTER_DEPTH) {
-        filteredVol[i] = (vol[i] + filteredVol[i] * (ADC_FILTER_DEPTH - 1)) / ADC_FILTER_DEPTH;
-      }
-      else {
-        filteredVol[i] = (vol[i] + filteredVol[i] * (adcCnt - 1)) / adcCnt;
-      }
-      */
-      filteredVol[i] = (vol[i] + filteredVol[i] * (ADC_FILTER_DEPTH - 1)) / ADC_FILTER_DEPTH;
-    }
+  if (filterDeepth != 0) { // execute moving average filter
+    // TODO : If other types of filters are used, past ADC sample values 
+    //        need to be calculated together, and a certain length of 
+    //        old sample values need to be cached. 
+    //        Because a simple algorithm of moving average is used here, 
+    //        past sample values are not cached for the time being.
+    movingAverageFilter(vol, filteredVol);
   }
-  else if (filterSW == FILTER_SOFT_OFF) { // do not execute filter
+  else { // do not execute filter
     memcpy((void*)filteredVol, (void*)vol, sizeof(vol));
   }
   osMutexRelease(ADCSamplingMutexHandle);

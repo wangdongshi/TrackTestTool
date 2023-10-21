@@ -38,6 +38,7 @@ extern TRACK_MEAS_ITEM meas;
 extern volatile float gyro_zero_offset[2];
 extern volatile uint64_t gyro_count[2];
 extern uint8_t format;
+extern uint16_t filterDeepth;
 
 /* Private variables ---------------------------------------------------------*/
 static uint8_t txBuffer[COMM_TX_BUFFER_SIZE];
@@ -49,7 +50,6 @@ TRIG_MODE trigMode = TRIG_CYCLIC;
 GYRO_MODE gyroMode = GYRO_OFFSET_HOLD;
 DIRECTION_MODE directionMode = DIRECTION_INCREASE;
 DATA_MODE dataMode = DATA_MEASURE;
-FILTER_MODE filterSW = FILTER_SOFT_ON;
 
 /* Private function prototypes -----------------------------------------------*/
 static uint16_t swapUint16(uint16_t value);
@@ -83,7 +83,7 @@ void commTask(void const * argument)
       case COMM_CHANGE_TO_NORMAL_MODE:
         workMode = MODE_NORMAL_WORK;
         meas.mileage = swapFloat(*(float*)(&rxMsgBuf[4]));
-        clearADCFilterData();
+        initFilter();
         break;
       case COMM_SET_MILAGE:
         stopEncoder();
@@ -115,10 +115,13 @@ void commTask(void const * argument)
         break;
       case COMM_SET_OUTPUT_ADC_DATA_MODE:
         dataMode = (DATA_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
-        clearADCFilterData();
+        initFilter();
         break;
       case COMM_SET_FILTER_MODE:
-        filterSW = (FILTER_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
+        filterDeepth = swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
+        filterDeepth = (filterDeepth > 64) ? 0 : filterDeepth;
+        filterDeepth = ((filterDeepth & (filterDeepth - 1)) == 0) ? filterDeepth : 0; // must be 2 to the Nth power
+        initFilter();
         break;
       default:
         break;
