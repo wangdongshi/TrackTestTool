@@ -47,6 +47,7 @@ static uint8_t rxMsgBuf[COMM_RX_BUFFER_SIZE];
 WORK_MODE workMode = MODE_PRE_WORK;
 TRIG_MODE trigMode = TRIG_CYCLIC;
 GYRO_MODE gyroMode = GYRO_OFFSET_HOLD;
+DIRECTION_MODE directionMode = DIRECTION_INCREASE;
 DATA_MODE dataMode = DATA_MEASURE;
 FILTER_MODE filterSW = FILTER_SOFT_ON;
 
@@ -71,6 +72,7 @@ void startCommunication(void)
 
 void commTask(void const * argument)
 {
+  //float mileage;
   while(1) {
     osSemaphoreWait(UserCommandArriveSemHandle, osWaitForever);
     // analysis command message
@@ -85,6 +87,7 @@ void commTask(void const * argument)
         break;
       case COMM_SET_MILAGE:
         stopEncoder();
+        directionMode = (DIRECTION_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[8]));
         startEncoder(swapFloat(*(float*)(&rxMsgBuf[4])));
         osSemaphoreRelease(EncoderArriveSemHandle);
         break;
