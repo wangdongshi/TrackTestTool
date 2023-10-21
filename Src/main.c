@@ -94,6 +94,8 @@ osSemaphoreId UserCommandArriveSemHandle;
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim7;
+osMutexId ADCSamplingMutexHandle;
+osSemaphoreId UserCommandProcessSemHandle;
 
 TRACK_MEAS_ITEM meas = {0.0f};
 uint8_t         format = OUTPUT_JUSTFLOAT;
@@ -176,6 +178,8 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
+  osMutexDef(ADCSamplingMutex);
+  ADCSamplingMutexHandle = osMutexCreate(osMutex(ADCSamplingMutex));
   /* USER CODE END RTOS_MUTEX */
 
   /* Create the semaphores(s) */
@@ -197,6 +201,8 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
+  osSemaphoreDef(UserCommandProcess);
+  UserCommandProcessSemHandle = osSemaphoreCreate(osSemaphore(UserCommandProcess), 1);
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -596,6 +602,8 @@ static void MX_TIM7_Init(void)
 static void initData(void)
 {
   meas.sequence = 0;
+  meas.temperature = 20.0f; // degree
+  meas.spped = 2.5f; // km/h
 }
 
 static void sendData2PC(void)
@@ -618,7 +626,7 @@ static void sendData2PC(void)
   else if (format == OUTPUT_FIREWATER) {
     if (dataMode == DATA_MEASURE) {
       // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-      PRINTF2("DATA : %.3f, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %.4f, %.2f, %.4f, %.4f, %ld\r\n",
+      PRINTF2("DATA : %.3f, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %.4f, %.2f, %.1f, %.2f, %.4f, %.4f, %ld\r\n",
               meas.mileage,
               meas.distance,
               meas.distance_comp,
@@ -628,6 +636,8 @@ static void sendData2PC(void)
               meas.pitch,
               meas.yaw,
               meas.battery,
+              meas.temperature,
+              meas.spped,
               meas.omega1,
               meas.omega2,
               meas.sequence

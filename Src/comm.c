@@ -30,8 +30,8 @@
 extern UART_HandleTypeDef huart2;
 extern DMA_HandleTypeDef hdma_usart2_rx;
 
-extern osMutexId UserCommandMutexHandle;
 extern osSemaphoreId UserCommandArriveSemHandle;
+extern osSemaphoreId UserCommandProcessSemHandle;
 extern osSemaphoreId EncoderArriveSemHandle;
 
 extern TRACK_MEAS_ITEM meas;
@@ -42,8 +42,7 @@ extern uint8_t format;
 /* Private variables ---------------------------------------------------------*/
 static uint8_t txBuffer[COMM_TX_BUFFER_SIZE];
 static uint8_t rxBuffer[COMM_RX_BUFFER_SIZE];
-
-COMM_MSG command; // It's a shared memory parameter which is protected by mutex.
+static uint8_t rxMsgBuf[COMM_RX_BUFFER_SIZE];
 
 WORK_MODE workMode = MODE_PRE_WORK;
 TRIG_MODE trigMode = TRIG_CYCLIC;
@@ -74,36 +73,32 @@ void commTask(void const * argument)
 {
   while(1) {
     osSemaphoreWait(UserCommandArriveSemHandle, osWaitForever);
-    if (command.length == 0) continue;
-    
-    COMM_MSG msg;
-    
-    osMutexWait(UserCommandMutexHandle, osWaitForever);
-    memcpy((void*)&msg, (void*)&command, sizeof(command));
-    osMutexRelease(UserCommandMutexHandle);
-    
-    switch (msg.type) {
+    // analysis command message
+    osSemaphoreWait(UserCommandProcessSemHandle, osWaitForever);
+    if (*((uint16_t*)rxMsgBuf) == 0) continue; // remove interference message on UART2
+    COMM_TYPE type = (COMM_TYPE)swapUint16(*(uint16_t*)(&rxMsgBuf[2]));
+    switch (type) {
       case COMM_CHANGE_TO_NORMAL_MODE:
         workMode = MODE_NORMAL_WORK;
-        meas.mileage = msg.startPoint;
+        meas.mileage = swapFloat(*(float*)(&rxMsgBuf[4]));
         clearADCFilterData();
         break;
       case COMM_SET_MILAGE:
         stopEncoder();
-        startEncoder(msg.startPoint);
+        startEncoder(swapFloat(*(float*)(&rxMsgBuf[4])));
         osSemaphoreRelease(EncoderArriveSemHandle);
         break;
       case COMM_SET_DISPLAY_MODE:
-        format = msg.outFormat;
+        format = swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
         break;
       case COMM_SET_TRIGGER_MODE:
-        trigMode = (TRIG_MODE)msg.trigMode;
+        trigMode = (TRIG_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
         if (workMode == MODE_NORMAL_WORK && trigMode == TRIG_CYCLIC) {
           osSemaphoreRelease(EncoderArriveSemHandle);
         }
         break;
       case COMM_SET_GYRO_ZERO_DRIFT_MODE:
-        gyroMode = (GYRO_MODE)msg.gyroMode;
+        gyroMode = (GYRO_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
         if (gyroMode == GYRO_OFFSET_HOLD) {
           gyro_zero_offset[0] = 0.0f;
           gyro_zero_offset[1] = 0.0f;
@@ -116,15 +111,16 @@ void commTask(void const * argument)
         }
         break;
       case COMM_SET_OUTPUT_ADC_DATA_MODE:
-        dataMode = (DATA_MODE)msg.dataMode;
+        dataMode = (DATA_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
         clearADCFilterData();
         break;
       case COMM_SET_FILTER_MODE:
-        filterSW = (FILTER_MODE)msg.filterSW;
+        filterSW = (FILTER_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
         break;
       default:
         break;
-    }    
+    }
+    osSemaphoreRelease(UserCommandProcessSemHandle);
   }
 }
 
@@ -157,35 +153,9 @@ void uart2RxCallback(void)
   HAL_UART_RX_DMAStop(&huart2);
   
   // Organize message content
-  osMutexWait(UserCommandMutexHandle, osWaitForever);
-  command.length  = length;
-  command.type    = swapUint16(*(uint16_t*)(&rxBuffer[2]));
-  switch (command.type) {
-    case COMM_CHANGE_TO_NORMAL_MODE:
-      command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
-      break;
-    case COMM_SET_MILAGE:
-      command.startPoint   = swapFloat(*(float*)(&rxBuffer[4]));
-      break;
-    case COMM_SET_DISPLAY_MODE:
-      command.outFormat = swapUint16(*(uint16_t*)(&rxBuffer[4]));
-      break;
-    case COMM_SET_TRIGGER_MODE:
-      command.trigMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
-      break;
-    case COMM_SET_GYRO_ZERO_DRIFT_MODE:
-      command.gyroMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
-      break;
-    case COMM_SET_OUTPUT_ADC_DATA_MODE:
-      command.dataMode = swapUint16(*(uint16_t*)(&rxBuffer[4]));
-      break;
-    case COMM_SET_FILTER_MODE:
-      command.filterSW = swapUint16(*(uint16_t*)(&rxBuffer[4]));
-      break;
-    default:
-      break;
-  }
-  osMutexRelease(UserCommandMutexHandle);
+  osSemaphoreWait(UserCommandProcessSemHandle, osWaitForever);
+  memcpy((void*)rxMsgBuf, (void*)rxBuffer, sizeof(rxBuffer));
+  osSemaphoreRelease(UserCommandProcessSemHandle);
   
   // Notify command task to process new command
   osSemaphoreRelease(UserCommandArriveSemHandle);

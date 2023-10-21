@@ -135,9 +135,11 @@ typedef struct _meas {
   float pitch;        // integral by gyro1
   float yaw;          // integral by gyro2
   float battery;
+  float temperature;
+  float spped;
   float omega1;       // measure by gyro1
   float omega2;       // measure by gyro2
-  uint64_t sequence;
+  uint32_t sequence;
 } TRACK_MEAS_ITEM;
 
 /* USER CODE END Private defines */

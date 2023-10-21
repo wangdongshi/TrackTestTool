@@ -61,17 +61,6 @@ typedef enum {
   OUTPUT_NUMBER_MAX
 } OUTPUT_MODE;
 
-typedef struct {
-  uint32_t  length;
-  uint16_t  type;
-  float     startPoint;  // Unit : mm
-  uint16_t  outFormat;
-  uint16_t  gyroMode;
-  uint16_t  trigMode;
-  uint16_t  dataMode;
-  uint16_t  filterSW;
-} COMM_MSG;
-
 void startCommunication(void);
 void PRINTF2(const char *format, ...);
 void TRACEFLOAT(float* input, unsigned short length);

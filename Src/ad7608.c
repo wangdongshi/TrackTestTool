@@ -48,7 +48,7 @@
 /* External Variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim7;
 extern SPI_HandleTypeDef hspi1;
-extern osMutexId UserCommandMutexHandle;
+extern osMutexId ADCSamplingMutexHandle;
 extern osSemaphoreId AdcConvertStartSemHandle;
 extern osSemaphoreId AdcConvertCompleteSemHandle;
 extern TRACK_MEAS_ITEM meas;
@@ -124,9 +124,9 @@ void clearADCFilterData(void)
     for (uint32_t j = 0; j < ADC_FILTER_DEPTH; j++) {
       filterBuffer[i][j] = 0.0f;
     }
-    osMutexWait(UserCommandMutexHandle, osWaitForever);
+    osMutexWait(ADCSamplingMutexHandle, osWaitForever);
     filteredVol[i] = 0.0f;
-    osMutexRelease(UserCommandMutexHandle);
+    osMutexRelease(ADCSamplingMutexHandle);
   }
 }
 
@@ -195,7 +195,7 @@ static void filterVoltage(void)
   }
   
   // copy voltage value
-  osMutexWait(UserCommandMutexHandle, osWaitForever);
+  osMutexWait(ADCSamplingMutexHandle, osWaitForever);
   if (filterSW == FILTER_SOFT_ON) { // execute filter (64-bit moving average)
     for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
       // TODO : If other types of filters are used, past ADC sample values 
@@ -223,7 +223,7 @@ static void filterVoltage(void)
   else if (filterSW == FILTER_SOFT_OFF) { // do not execute filter
     memcpy((void*)filteredVol, (void*)vol, sizeof(vol));
   }
-  osMutexRelease(UserCommandMutexHandle);
+  osMutexRelease(ADCSamplingMutexHandle);
   
   // copy data to print buffer
   switch (dataMode) {
@@ -250,7 +250,7 @@ void prepareSensorData(void)
   float sinRoll;
   
   // set normal valtage item
-  osMutexWait(UserCommandMutexHandle, osWaitForever);
+  osMutexWait(ADCSamplingMutexHandle, osWaitForever);
   meas.distance_comp= filteredVol[TRACK_DIST_COMP];
   meas.height_comp  = filteredVol[TRACK_HEIGHT_COMP];
   meas.distance     = filteredVol[TRACK_DISTANCE];
@@ -260,7 +260,7 @@ void prepareSensorData(void)
   // Angle = arcsin((E0-Eb)/SF)-Theta
   sinRoll = (filteredVol[TRACK_DIP_A1] - filteredVol[TRACK_DIP_0] - 
              INERTIAL_SENSOR_ZERO_OUTPUT) / TILT_SCALE_FACTOR;
-  osMutexRelease(UserCommandMutexHandle);
+  osMutexRelease(ADCSamplingMutexHandle);
   if (sinRoll > +1.0f) sinRoll = +1.0f;
   if (sinRoll < -1.0f) sinRoll = -1.0f;
   meas.roll = asin(sinRoll) * CIRCULAR_ANGLE_DEGREE / (2.0f * PI) - 
