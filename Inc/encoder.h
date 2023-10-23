@@ -13,6 +13,7 @@
 
 void startEncoder(float mileage);
 void stopEncoder(void);
+void speedTimerOverflow(void);
 void encoderCallback(void);
 
 #endif // __ENCODER_H__

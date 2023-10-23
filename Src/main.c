@@ -94,6 +94,7 @@ osSemaphoreId UserCommandArriveSemHandle;
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim7;
+TIM_HandleTypeDef htim14;
 osMutexId ADCSamplingMutexHandle;
 osSemaphoreId UserCommandProcessSemHandle;
 
@@ -121,6 +122,7 @@ void monitorTask(void const * argument);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 static void MX_TIM7_Init(void);
+static void MX_TIM14_Init(void);
 static void sendData2PC(void);
 /* USER CODE END PFP */
 
@@ -169,6 +171,7 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   MX_TIM7_Init();
+  MX_TIM14_Init();
   /* USER CODE END 2 */
 
   /* Create the mutex(es) */
@@ -599,11 +602,43 @@ static void MX_TIM7_Init(void)
 
 }
 
+static void MX_TIM14_Init(void)
+{
+
+  /* USER CODE BEGIN TIM14_Init 0 */
+
+  /* USER CODE END TIM14_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM14_Init 1 */
+
+  /* USER CODE END TIM14_Init 1 */
+  htim14.Instance = TIM14;
+  htim14.Init.Prescaler = 168000 - 1; // 1KHz
+  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim14.Init.Period = 10000 - 1; // 10s
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim14, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM14_Init 2 */
+
+  /* USER CODE END TIM14_Init 2 */
+
+}
+
 static void initData(void)
 {
   meas.sequence = 0;
   meas.temperature = 20.0f; // degree
-  meas.spped = 2.5f; // km/h
+  meas.speed = 0.0f; // km/h
 }
 
 static void sendData2PC(void)
@@ -637,7 +672,7 @@ static void sendData2PC(void)
               meas.yaw,
               meas.battery,
               meas.temperature,
-              meas.spped,
+              meas.speed,
               meas.omega1,
               meas.omega2,
               meas.sequence
@@ -787,6 +822,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
   else if (htim->Instance == TIM7) {
     osSemaphoreRelease(AdcConvertStartSemHandle);
+  }
+  else if (htim->Instance == TIM14) {
+    speedTimerOverflow();
+    HAL_TIM_Base_Stop_IT(&htim14);
   }
   /* USER CODE END Callback 1 */
 }

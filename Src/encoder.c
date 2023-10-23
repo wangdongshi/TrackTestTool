@@ -32,12 +32,14 @@ typedef enum {
 
 /* Private variables ---------------------------------------------------------*/
 static int16_t direction;
+static uint8_t tim14Overflow = 0;
 static DIRECTION_ENCODER currentDirection, previousDirection;
 static uint32_t counter = (uint32_t)(TESTER_TRIGGER_DISTANCE * 
   ENCODER_MULTI_FREQ * ENCODER_PULSE_RATE / MILEAGE_WHEEL_DIAMETER / PI);
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim14;
 extern osSemaphoreId EncoderArriveSemHandle;
 extern TRACK_MEAS_ITEM meas;
 extern DIRECTION_MODE directionMode;
@@ -63,6 +65,9 @@ void startEncoder(float mileage)
 {
   meas.mileage = mileage;
   
+  tim14Overflow = 0;
+  HAL_TIM_Base_Start_IT(&htim14); // start 10s cyclic timer
+  
   initEncoder();
   
   __HAL_TIM_CLEAR_IT(&htim1, TIM_IT_UPDATE);
@@ -77,13 +82,29 @@ void stopEncoder(void)
   __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_UPDATE);
 }
 
+void speedTimerOverflow(void)
+{
+  tim14Overflow = 1;
+}
+
 void encoderCallback(void)
 {
+  // update speed
+  uint32_t ms = __HAL_TIM_GET_COUNTER(&htim14);
+  meas.speed = (tim14Overflow) ? 0.0f : (TESTER_TRIGGER_DISTANCE / (float)ms);
+  tim14Overflow = 0;
+  HAL_TIM_Base_Stop_IT(&htim14);
+  HAL_TIM_Base_Start_IT(&htim14);
+  
+  // update mileage and direction
   currentDirection = (__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim1)) ? BACKWARD : FORWARD;
   if (currentDirection == previousDirection) {
     if (currentDirection == FORWARD) meas.mileage += (TESTER_TRIGGER_DISTANCE / 1000.f) * (float)direction;
     else meas.mileage -= (TESTER_TRIGGER_DISTANCE / 1000.f) * (float)direction;
     osSemaphoreRelease(EncoderArriveSemHandle);
+  }
+  else {
+    meas.speed = 0.0f;
   }
   previousDirection = currentDirection;
 }
