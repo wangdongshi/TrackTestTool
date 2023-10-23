@@ -39,6 +39,7 @@
 #define AD7608_BUSY       LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_5)
 
 #define ADC_FILTER_MAX_DEPTH             64
+#define ADC_VOLTAGE_NOISE_NUMBER         10                 // 10 max. points and 10 min. points each
 #define ADC_VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
 #define INERTIAL_SENSOR_ZERO_OUTPUT      2.50f              // 2.47 to 2.53
 #define CIRCULAR_ANGLE_DEGREE            360.0f             // Unit : degree
@@ -60,6 +61,7 @@ const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DA
 static uint8_t buff[AD7608_DMA_BUFFER_LENGTH];
 
 uint16_t filterDeepth = 0;
+static uint16_t noisePtsNumber = 0;
 float outputADVal[AD7608_CH_NUMBER]; // channel data for print to VOFA+
 static int32_t adc[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
 static float filteredVol[AD7608_CH_NUMBER]; // filtered ADC data (length = 18 bit)
@@ -69,6 +71,9 @@ static float filteredVol[AD7608_CH_NUMBER]; // filtered ADC data (length = 18 bi
 static void AD7608_RESET(void);
 static void AD7608_TRIGGER(void);
 static void Delay(uint32_t nCount);
+static void movingAverageFilter(const float* xn, float* yn);
+static float replaceUpperNoisePts(float* array, float value);
+static float replaceLowerNoisePts(float* array, float value);
 static void filterVoltage(void);
 static float calibrateADCData(ADC_CAL item, float raw);
 
@@ -162,39 +167,6 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 #endif
   
   osSemaphoreRelease(AdcConvertCompleteSemHandle);
-}
-
-// 
-static int32_t filterIndex = -1;
-static float filterSum[AD7608_CH_NUMBER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-static float filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_MAX_DEPTH]; // ADC filter data buffer
-void initFilter(void)
-{
-  filterIndex = -1;
-  for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) filterSum[i] = 0.0f;
-}
-
-static void movingAverageFilter(const float* xn, float* yn)
-{
-  if(filterIndex == -1) { // init moving verage filter
-    for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
-      for(uint16_t j = 0; j < filterDeepth; j++) {
-        filterBuffer[i][j] = xn[i];
-      }
-      filterSum[i] = xn[i] * filterDeepth;
-    }
-    filterIndex = 0;
-  }
-  else {
-    for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
-      filterSum[i] -= filterBuffer[i][filterIndex];
-      filterBuffer[i][filterIndex] = xn[i];
-      filterSum[i] += xn[i];
-      yn[i] = filterSum[i] / filterDeepth;
-    }
-    filterIndex++;
-    if (filterIndex >= filterDeepth) filterIndex = 0;
-  }
 }
 
 static void filterVoltage(void)
@@ -296,4 +268,118 @@ static float calibrateADCData(ADC_CAL item, float raw)
           (tbl[item][index].real - tbl[item][index - 1].real);
   
   return result;
+}
+
+// an implementation of a moving average filter including noise removal
+static int32_t filterIndex = -1;
+static float filterSum[AD7608_CH_NUMBER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+static float filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_MAX_DEPTH]; // ADC filter data buffer
+static float upperNoisePts[AD7608_CH_NUMBER][ADC_VOLTAGE_NOISE_NUMBER];
+static float lowerNoisePts[AD7608_CH_NUMBER][ADC_VOLTAGE_NOISE_NUMBER];
+
+void initFilter(void)
+{
+  // initialize index 
+  filterIndex = -1;
+  
+  // initialize noise number 
+  switch (filterDeepth) {
+    default:
+    case 0:
+    case 2:
+      noisePtsNumber = 0;
+      break;
+    case 4:
+      noisePtsNumber = 1;
+      break;
+    case 8:
+      noisePtsNumber = 2;
+      break;
+    case 16:
+      noisePtsNumber = 3;
+      break;
+    case 32:
+      noisePtsNumber = 5;
+      break;
+    case 64:
+      noisePtsNumber = 10;
+      break;
+  }
+  
+  // initialize cumulative sum
+  for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
+    for(uint16_t j = 0; j < noisePtsNumber; j++) {
+      upperNoisePts[i][j] = 0.0f;
+      lowerNoisePts[i][j] = 10.0f;
+    }
+    filterSum[i] = 0.0f;
+  }
+}
+
+static void movingAverageFilter(const float* xn, float* yn)
+{
+  if(filterIndex == -1) { // init moving verage filter
+    for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
+      for(uint16_t j = 0; j < filterDeepth; j++) {
+        filterBuffer[i][j] = xn[i];
+      }
+      for(uint16_t j = 0; j < noisePtsNumber; j++) {
+        upperNoisePts[i][j] = xn[i];
+        lowerNoisePts[i][j] = xn[i];
+      }
+      filterSum[i] = xn[i] * (filterDeepth - noisePtsNumber * 2);
+    }
+    filterIndex = 0;
+  }
+  else {
+    for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
+      filterSum[i] -= filterBuffer[i][filterIndex];
+      filterBuffer[i][filterIndex] = xn[i];
+      filterSum[i] += xn[i];
+      float upperNoiseSum = replaceUpperNoisePts(upperNoisePts[i], xn[i]);
+      float lowerNoiseSum = replaceLowerNoisePts(lowerNoisePts[i], xn[i]);
+      yn[i] = (filterSum[i] - upperNoiseSum - lowerNoiseSum) / 
+              (filterDeepth - noisePtsNumber * 2);
+    }
+    filterIndex++;
+    if (filterIndex >= filterDeepth) filterIndex = 0;
+  }
+}
+
+static float replaceUpperNoisePts(float* array, float value)
+{
+  float sumUpper = 0.0f;
+  float minValue = 10.0f;
+  uint16_t index = 0;
+  for(uint16_t i = 0; i < noisePtsNumber; i++) {
+    sumUpper += array[i];
+    if (array[i] < minValue) {
+      minValue = array[i];
+      index = i;
+    }
+  }
+  if (value > minValue) {
+    array[index] = value;
+    sumUpper = sumUpper - minValue + value;
+  }
+  return sumUpper;
+}
+
+static float replaceLowerNoisePts(float* array, float value)
+{
+  float sumLower = 0.0f;
+  float maxValue = 0.0f;
+  uint16_t index = 0;
+  for(uint16_t i = 0; i < noisePtsNumber; i++) {
+    sumLower += array[i];
+    if (array[i] > maxValue) {
+      maxValue = array[i];
+      index = i;
+    }
+  }
+  if (value < maxValue) {
+    array[index] = value;
+    sumLower = sumLower - maxValue + value;
+  }
+  return sumLower;
 }
