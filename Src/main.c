@@ -94,7 +94,7 @@ osSemaphoreId UserCommandArriveSemHandle;
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim7;
-TIM_HandleTypeDef htim14;
+TIM_HandleTypeDef htim4;
 osMutexId ADCSamplingMutexHandle;
 osSemaphoreId UserCommandProcessSemHandle;
 
@@ -122,7 +122,7 @@ void monitorTask(void const * argument);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 static void MX_TIM7_Init(void);
-static void MX_TIM14_Init(void);
+static void MX_TIM4_Init(void);
 static void sendData2PC(void);
 /* USER CODE END PFP */
 
@@ -170,8 +170,8 @@ int main(void)
   MX_USART6_UART_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  MX_TIM4_Init();
   MX_TIM7_Init();
-  MX_TIM14_Init();
   /* USER CODE END 2 */
 
   /* Create the mutex(es) */
@@ -583,7 +583,7 @@ static void MX_TIM7_Init(void)
 
   /* USER CODE END TIM7_Init 1 */
   htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 16800 - 1;
+  htim7.Init.Prescaler = 8400 - 1; // APB1 Timer 10KHz(0.1ms/count)
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim7.Init.Period = 50 - 1; // 5ms
   if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
@@ -602,35 +602,44 @@ static void MX_TIM7_Init(void)
 
 }
 
-static void MX_TIM14_Init(void)
+static void MX_TIM4_Init(void)
 {
 
-  /* USER CODE BEGIN TIM14_Init 0 */
+  /* USER CODE BEGIN TIM4_Init 0 */
 
-  /* USER CODE END TIM14_Init 0 */
+  /* USER CODE END TIM4_Init 0 */
 
+  TIM_ClockConfigTypeDef sClockSourceConfig;
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-  /* USER CODE BEGIN TIM14_Init 1 */
+  /* USER CODE BEGIN TIM4_Init 1 */
 
-  /* USER CODE END TIM14_Init 1 */
-  htim14.Instance = TIM14;
-  htim14.Init.Prescaler = 168000 - 1; // 1KHz
-  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 10000 - 1; // 10s
-  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 8400 * 2 - 1; // APB1 Timer 5KHz(0.2ms/count)
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 1000 * 5 - 1; // 1s
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
   {
     Error_Handler();
   }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim14, &sMasterConfig) != HAL_OK)
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM14_Init 2 */
+  /* USER CODE BEGIN TIM4_Init 2 */
 
-  /* USER CODE END TIM14_Init 2 */
+  /* USER CODE END TIM4_Init 2 */
 
 }
 
@@ -661,7 +670,7 @@ static void sendData2PC(void)
   else if (format == OUTPUT_FIREWATER) {
     if (dataMode == DATA_MEASURE) {
       // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-      PRINTF2("DATA : %.3f, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %.4f, %.2f, %.1f, %.2f, %.4f, %.4f, %ld\r\n",
+      PRINTF2("DATA : %.3f, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %.4f, %.2f, %.1f, %.3f, %.4f, %.4f, %ld\r\n",
               meas.mileage,
               meas.distance,
               meas.distance_comp,
@@ -823,9 +832,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   else if (htim->Instance == TIM7) {
     osSemaphoreRelease(AdcConvertStartSemHandle);
   }
-  else if (htim->Instance == TIM14) {
+  else if (htim->Instance == TIM4) {
     speedTimerOverflow();
-    HAL_TIM_Base_Stop_IT(&htim14);
   }
   /* USER CODE END Callback 1 */
 }

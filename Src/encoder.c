@@ -19,6 +19,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 #define DIRECTION_ENCODER_INSTALL (1) // 1 or -1
+#define SPEED_FACTOR              3.6f    // mm/ms --> km/h
 #define TESTER_TRIGGER_DISTANCE   125.0f  // Unit : mm
 #define ENCODER_PULSE_RATE        200     // Unit : pulse/r (Omron E6B2)
 #define ENCODER_MULTI_FREQ        4       // A & B signal, rising & falling edge
@@ -32,14 +33,14 @@ typedef enum {
 
 /* Private variables ---------------------------------------------------------*/
 static int16_t direction;
-static uint8_t tim14Overflow = 0;
+static uint8_t tim4Overflow = 0;
 static DIRECTION_ENCODER currentDirection, previousDirection;
 static uint32_t counter = (uint32_t)(TESTER_TRIGGER_DISTANCE * 
   ENCODER_MULTI_FREQ * ENCODER_PULSE_RATE / MILEAGE_WHEEL_DIAMETER / PI);
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim14;
+extern TIM_HandleTypeDef htim4;
 extern osSemaphoreId EncoderArriveSemHandle;
 extern TRACK_MEAS_ITEM meas;
 extern DIRECTION_MODE directionMode;
@@ -65,8 +66,8 @@ void startEncoder(float mileage)
 {
   meas.mileage = mileage;
   
-  tim14Overflow = 0;
-  HAL_TIM_Base_Start_IT(&htim14); // start 10s cyclic timer
+  tim4Overflow = 0;
+  HAL_TIM_Base_Start_IT(&htim4); // start 10s cyclic timer
   
   initEncoder();
   
@@ -84,17 +85,35 @@ void stopEncoder(void)
 
 void speedTimerOverflow(void)
 {
-  tim14Overflow = 1;
+  HAL_TIM_Base_Stop_IT(&htim4);
+  __HAL_TIM_SET_COUNTER(&htim4, 0);
+  tim4Overflow = 1;
+  meas.speed = 0.0f;
 }
 
 void encoderCallback(void)
 {
+  float ms;
   // update speed
-  uint32_t ms = __HAL_TIM_GET_COUNTER(&htim14);
-  meas.speed = (tim14Overflow) ? 0.0f : (TESTER_TRIGGER_DISTANCE / (float)ms);
-  tim14Overflow = 0;
-  HAL_TIM_Base_Stop_IT(&htim14);
-  HAL_TIM_Base_Start_IT(&htim14);
+  uint32_t cnt = __HAL_TIM_GET_COUNTER(&htim4);
+  if (tim4Overflow) { // The encoder was triggered in the case of the last timeout. 
+                      // The speed can't be calculated this time and it is still set to 0.
+    meas.speed = 0.0f;
+  }
+  else {
+    if (cnt == 0) {
+      meas.speed = 100.0f; // The interval between two encoder interruptions is zero. 
+                           // It means that the speed exceeds the upper limit. So it is set to 100km/h.
+    }
+    else {
+      ms = (float)cnt * 0.2f; // 1 cnt = 0.2 ms
+      meas.speed = TESTER_TRIGGER_DISTANCE / ms * SPEED_FACTOR;
+    }
+  }
+  tim4Overflow = 0;
+  HAL_TIM_Base_Stop_IT(&htim4);
+  __HAL_TIM_SET_COUNTER(&htim4, 0);
+  HAL_TIM_Base_Start_IT(&htim4);
   
   // update mileage and direction
   currentDirection = (__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim1)) ? BACKWARD : FORWARD;
@@ -104,7 +123,7 @@ void encoderCallback(void)
     osSemaphoreRelease(EncoderArriveSemHandle);
   }
   else {
-    meas.speed = 0.0f;
+    meas.speed = 0.0f; // The rotation is reversed and the speed returns to zero.
   }
   previousDirection = currentDirection;
 }

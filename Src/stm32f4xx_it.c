@@ -40,7 +40,7 @@
 #include "comm.h"
 
 extern TIM_HandleTypeDef htim7;
-extern TIM_HandleTypeDef htim14;
+extern TIM_HandleTypeDef htim4;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -335,17 +335,17 @@ void TIM7_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles TIM14 global interrupt.
+  * @brief This function handles TIM4 global interrupt.
   */
-void TIM14_IRQHandler(void)
+void TIM4_IRQHandler(void)
 {
-  /* USER CODE BEGIN TIM14_IRQn 0 */
+  /* USER CODE BEGIN TIM4_IRQn 0 */
 
-  /* USER CODE END TIM14_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim14);
-  /* USER CODE BEGIN TIM14_IRQn 1 */
+  /* USER CODE END TIM4_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim4);
+  /* USER CODE BEGIN TIM4_IRQn 1 */
 
-  /* USER CODE END TIM14_IRQn 1 */
+  /* USER CODE END TIM4_IRQn 1 */
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
