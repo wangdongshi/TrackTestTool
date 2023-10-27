@@ -72,8 +72,7 @@ static void AD7608_RESET(void);
 static void AD7608_TRIGGER(void);
 static void Delay(uint32_t nCount);
 static void movingAverageFilter(const float* xn, float* yn);
-static float replaceUpperNoisePts(float* array, float value);
-static float replaceLowerNoisePts(float* array, float value);
+static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, const float* pArray);
 static void filterVoltage(void);
 static float calibrateADCData(ADC_CAL item, float raw);
 
@@ -270,12 +269,11 @@ static float calibrateADCData(ADC_CAL item, float raw)
   return result;
 }
 
-// an implementation of a moving average filter including noise removal
+// an implementation of a moving average filter with noise removal
 static int32_t filterIndex = -1;
 static float filterSum[AD7608_CH_NUMBER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 static float filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_MAX_DEPTH]; // ADC filter data buffer
-static float upperNoisePts[AD7608_CH_NUMBER][ADC_VOLTAGE_NOISE_NUMBER];
-static float lowerNoisePts[AD7608_CH_NUMBER][ADC_VOLTAGE_NOISE_NUMBER];
+static float sortArray[ADC_FILTER_MAX_DEPTH];
 
 void initFilter(void)
 {
@@ -305,29 +303,19 @@ void initFilter(void)
       noisePtsNumber = 10;
       break;
   }
-  
-  // initialize cumulative sum
-  for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
-    for(uint16_t j = 0; j < noisePtsNumber; j++) {
-      upperNoisePts[i][j] = 0.0f;
-      lowerNoisePts[i][j] = 10.0f;
-    }
-    filterSum[i] = 0.0f;
-  }
 }
 
 static void movingAverageFilter(const float* xn, float* yn)
 {
+  float noiseSum;
+  
   if(filterIndex == -1) { // init moving verage filter
     for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
       for(uint16_t j = 0; j < filterDeepth; j++) {
         filterBuffer[i][j] = xn[i];
       }
-      for(uint16_t j = 0; j < noisePtsNumber; j++) {
-        upperNoisePts[i][j] = xn[i];
-        lowerNoisePts[i][j] = xn[i];
-      }
-      filterSum[i] = xn[i] * (filterDeepth - noisePtsNumber * 2);
+      filterSum[i] = xn[i] * filterDeepth;
+      yn[i] = xn[i];
     }
     filterIndex = 0;
   }
@@ -336,50 +324,45 @@ static void movingAverageFilter(const float* xn, float* yn)
       filterSum[i] -= filterBuffer[i][filterIndex];
       filterBuffer[i][filterIndex] = xn[i];
       filterSum[i] += xn[i];
-      float upperNoiseSum = replaceUpperNoisePts(upperNoisePts[i], xn[i]);
-      float lowerNoiseSum = replaceLowerNoisePts(lowerNoisePts[i], xn[i]);
-      yn[i] = (filterSum[i] - upperNoiseSum - lowerNoiseSum) / 
-              (filterDeepth - noisePtsNumber * 2);
+      noiseSum = getNoiseSum(filterDeepth, noisePtsNumber, filterBuffer[i]);
+      yn[i] = (filterSum[i] - noiseSum) / (filterDeepth - noisePtsNumber * 2);
     }
     filterIndex++;
     if (filterIndex >= filterDeepth) filterIndex = 0;
   }
 }
 
-static float replaceUpperNoisePts(float* array, float value)
+static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, const float* pArray)
 {
-  float sumUpper = 0.0f;
-  float minValue = 10.0f;
-  uint16_t index = 0;
-  for(uint16_t i = 0; i < noisePtsNumber; i++) {
-    sumUpper += array[i];
-    if (array[i] < minValue) {
-      minValue = array[i];
-      index = i;
+  assert_param(deepth <= 64);
+  assert_param(noisePtsNum <= 10);
+  
+  float temp = 0.0f;
+  float noiseSum = 0.0f;
+  uint32_t exchanged = 1;
+  
+  memcpy((void*)sortArray, (void*)pArray, deepth * sizeof(float));
+  
+  // bubble sort
+  for(uint32_t i = 0; (i < deepth - 1) && exchanged; i++) {
+    exchanged = 0;
+    for(uint32_t j = 0; j < deepth - 1 - i; j++) {
+      if (sortArray[j] > sortArray[j + 1]) {
+        temp = sortArray[j];
+        sortArray[j] = sortArray[j + 1];
+        sortArray[j + 1] = temp;
+        exchanged = 1;
+      }
     }
   }
-  if (value > minValue) {
-    array[index] = value;
-    sumUpper = sumUpper - minValue + value;
+  
+  // calculate noise points sum
+  for(uint32_t i = 0; i < noisePtsNum; i++) {
+    noiseSum += sortArray[i];
   }
-  return sumUpper;
-}
-
-static float replaceLowerNoisePts(float* array, float value)
-{
-  float sumLower = 0.0f;
-  float maxValue = 0.0f;
-  uint16_t index = 0;
-  for(uint16_t i = 0; i < noisePtsNumber; i++) {
-    sumLower += array[i];
-    if (array[i] > maxValue) {
-      maxValue = array[i];
-      index = i;
-    }
+  for(uint32_t i = deepth - 1; i > deepth - noisePtsNum - 1; i--) {
+    noiseSum += sortArray[i];
   }
-  if (value < maxValue) {
-    array[index] = value;
-    sumLower = sumLower - maxValue + value;
-  }
-  return sumLower;
+  
+  return noiseSum;
 }
