@@ -33,14 +33,14 @@ typedef enum {
 
 /* Private variables ---------------------------------------------------------*/
 static int16_t direction;
-static uint8_t tim4Overflow = 0;
+static uint8_t tim5Overflow = 0;
 static DIRECTION_ENCODER currentDirection, previousDirection;
 static uint32_t counter = (uint32_t)(TESTER_TRIGGER_DISTANCE * 
   ENCODER_MULTI_FREQ * ENCODER_PULSE_RATE / MILEAGE_WHEEL_DIAMETER / PI);
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim5;
 extern osSemaphoreId EncoderArriveSemHandle;
 extern TRACK_MEAS_ITEM meas;
 extern DIRECTION_MODE directionMode;
@@ -66,8 +66,8 @@ void startEncoder(float mileage)
 {
   meas.mileage = mileage;
   
-  tim4Overflow = 0;
-  HAL_TIM_Base_Start_IT(&htim4); // start 10s cyclic timer
+  tim5Overflow = 0;
+  HAL_TIM_Base_Start_IT(&htim5); // start 10s cyclic timer
   
   initEncoder();
   
@@ -85,9 +85,9 @@ void stopEncoder(void)
 
 void speedTimerOverflow(void)
 {
-  HAL_TIM_Base_Stop_IT(&htim4);
-  __HAL_TIM_SET_COUNTER(&htim4, 0);
-  tim4Overflow = 1;
+  HAL_TIM_Base_Stop_IT(&htim5);
+  __HAL_TIM_SET_COUNTER(&htim5, 0);
+  tim5Overflow = 1;
   meas.speed = 0.0f;
 }
 
@@ -95,8 +95,8 @@ void encoderCallback(void)
 {
   float ms;
   // update speed
-  uint32_t cnt = __HAL_TIM_GET_COUNTER(&htim4);
-  if (tim4Overflow) { // The encoder was triggered in the case of the last timeout. 
+  uint32_t cnt = __HAL_TIM_GET_COUNTER(&htim5);
+  if (tim5Overflow) { // The encoder was triggered in the case of the last timeout. 
                       // The speed can't be calculated this time and it is still set to 0.
     meas.speed = 0.0f;
   }
@@ -110,10 +110,10 @@ void encoderCallback(void)
       meas.speed = TESTER_TRIGGER_DISTANCE / ms * SPEED_FACTOR;
     }
   }
-  tim4Overflow = 0;
-  HAL_TIM_Base_Stop_IT(&htim4);
-  __HAL_TIM_SET_COUNTER(&htim4, 0);
-  HAL_TIM_Base_Start_IT(&htim4);
+  tim5Overflow = 0;
+  HAL_TIM_Base_Stop_IT(&htim5);
+  __HAL_TIM_SET_COUNTER(&htim5, 0);
+  HAL_TIM_Base_Start_IT(&htim5);
   
   // update mileage and direction
   currentDirection = (__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim1)) ? BACKWARD : FORWARD;

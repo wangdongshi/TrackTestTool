@@ -309,7 +309,7 @@ static void movingAverageFilter(const float* xn, float* yn)
 {
   float noiseSum;
   
-  if(filterIndex == -1) { // init moving verage filter
+  if(filterIndex == -1) { // init moving average filter
     for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
       for(uint16_t j = 0; j < filterDeepth; j++) {
         filterBuffer[i][j] = xn[i];

@@ -94,7 +94,7 @@ osSemaphoreId UserCommandArriveSemHandle;
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim7;
-TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim5;
 osMutexId ADCSamplingMutexHandle;
 osSemaphoreId UserCommandProcessSemHandle;
 
@@ -122,7 +122,7 @@ void monitorTask(void const * argument);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 static void MX_TIM7_Init(void);
-static void MX_TIM4_Init(void);
+static void MX_TIM5_Init(void);
 static void sendData2PC(void);
 /* USER CODE END PFP */
 
@@ -170,7 +170,7 @@ int main(void)
   MX_USART6_UART_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  MX_TIM4_Init();
+  MX_TIM5_Init();
   MX_TIM7_Init();
   /* USER CODE END 2 */
 
@@ -602,44 +602,44 @@ static void MX_TIM7_Init(void)
 
 }
 
-static void MX_TIM4_Init(void)
+static void MX_TIM5_Init(void)
 {
 
-  /* USER CODE BEGIN TIM4_Init 0 */
+  /* USER CODE BEGIN TIM5_Init 0 */
 
-  /* USER CODE END TIM4_Init 0 */
+  /* USER CODE END TIM5_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig;
   TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-  /* USER CODE BEGIN TIM4_Init 1 */
+  /* USER CODE BEGIN TIM5_Init 1 */
 
-  /* USER CODE END TIM4_Init 1 */
-  htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 8400 * 2 - 1; // APB1 Timer 5KHz(0.2ms/count)
-  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 1000 * 5 - 1; // 1s
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  /* USER CODE END TIM5_Init 1 */
+  htim5.Instance = TIM4;
+  htim5.Init.Prescaler = 8400 * 2 - 1; // APB1 Timer 5KHz(0.2ms/count)
+  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim5.Init.Period = 1000 * 5 - 1; // 1s
+  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
   {
     Error_Handler();
   }
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
   {
     Error_Handler();
   }
   
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM4_Init 2 */
+  /* USER CODE BEGIN TIM5_Init 2 */
 
-  /* USER CODE END TIM4_Init 2 */
+  /* USER CODE END TIM5_Init 2 */
 
 }
 
@@ -832,7 +832,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   else if (htim->Instance == TIM7) {
     osSemaphoreRelease(AdcConvertStartSemHandle);
   }
-  else if (htim->Instance == TIM4) {
+  else if (htim->Instance == TIM5) {
     speedTimerOverflow();
   }
   /* USER CODE END Callback 1 */
