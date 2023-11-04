@@ -332,10 +332,10 @@ static void movingAverageFilter(const float* xn, float* yn)
   }
 }
 
-static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, const float* pArray)
+static float getNoiseSum(const uint32_t deepth, const uint32_t noiseNum, const float* pArray)
 {
   assert_param(deepth <= 64);
-  assert_param(noisePtsNum <= 10);
+  assert_param(noiseNum <= 10);
   
   float temp = 0.0f;
   float noiseSum = 0.0f;
@@ -357,10 +357,10 @@ static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, cons
   }
   
   // calculate noise points sum
-  for(uint32_t i = 0; i < noisePtsNum; i++) {
+  for(uint32_t i = 0; i < noiseNum; i++) {
     noiseSum += sortArray[i];
   }
-  for(uint32_t i = deepth - 1; i > deepth - noisePtsNum - 1; i--) {
+  for(uint32_t i = deepth - noiseNum; i < deepth; i++) {
     noiseSum += sortArray[i];
   }
   

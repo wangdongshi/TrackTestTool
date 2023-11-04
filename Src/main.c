@@ -615,7 +615,7 @@ static void MX_TIM5_Init(void)
   /* USER CODE BEGIN TIM5_Init 1 */
 
   /* USER CODE END TIM5_Init 1 */
-  htim5.Instance = TIM4;
+  htim5.Instance = TIM5;
   htim5.Init.Prescaler = 8400 * 2 - 1; // APB1 Timer 5KHz(0.2ms/count)
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim5.Init.Period = 1000 * 5 - 1; // 1s
