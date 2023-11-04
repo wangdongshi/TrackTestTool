@@ -59,6 +59,7 @@
 #include "ad7608.h"
 #include "gyro97B.h"
 #include "encoder.h"
+#include "nst1001.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -93,8 +94,9 @@ osSemaphoreId UserCommandArriveSemHandle;
 /* Private structs -----------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim7;
-TIM_HandleTypeDef htim5;
+TIM_HandleTypeDef htim7; // ADC sampling driver
+TIM_HandleTypeDef htim5; // speed sensor
+TIM_HandleTypeDef htim4; // temperature sensor
 osMutexId ADCSamplingMutexHandle;
 osSemaphoreId UserCommandProcessSemHandle;
 
@@ -123,6 +125,7 @@ void monitorTask(void const * argument);
 /* Private function prototypes -----------------------------------------------*/
 static void MX_TIM7_Init(void);
 static void MX_TIM5_Init(void);
+static void MX_TIM4_Init(void);
 static void sendData2PC(void);
 /* USER CODE END PFP */
 
@@ -170,8 +173,9 @@ int main(void)
   MX_USART6_UART_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  MX_TIM5_Init();
   MX_TIM7_Init();
+  MX_TIM5_Init();
+  MX_TIM4_Init();
   /* USER CODE END 2 */
 
   /* Create the mutex(es) */
@@ -643,6 +647,40 @@ static void MX_TIM5_Init(void)
 
 }
 
+static void MX_TIM4_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 0;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 0xFFFF;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
+  sClockSourceConfig.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
+  sClockSourceConfig.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
+  sClockSourceConfig.ClockFilter = 0;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
 static void initData(void)
 {
   meas.sequence = 0;
@@ -741,6 +779,7 @@ void mainTask(void const * argument)
   startGyro();
   startADC();
   startEncoder(0.0f);
+  startTempSensor();
   startCommunication();
   
   while(1) {
