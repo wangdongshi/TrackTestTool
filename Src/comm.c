@@ -72,7 +72,6 @@ void startCommunication(void)
 
 void commTask(void const * argument)
 {
-  //float mileage;
   while(1) {
     osSemaphoreWait(UserCommandArriveSemHandle, osWaitForever);
     // analysis command message
@@ -135,7 +134,10 @@ void uart2RxCallback(void)
   // Check error
   uint32_t isrFlags   = READ_REG(huart2.Instance->SR);
   uint32_t errorFlags = (isrFlags & (uint32_t)(USART_SR_PE | USART_SR_FE | USART_SR_ORE | USART_SR_NE));
-  if(errorFlags != RESET) return; // There are normal errors in interrupt.
+  if(errorFlags != RESET) {
+    volatile uint32_t dr = READ_REG(huart2.Instance->DR);
+    return; // There are normal errors in interrupt.
+  }
   
   // Check interrupt type
   uint32_t idleFlag   = __HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE);

@@ -458,6 +458,11 @@
               <FilePath>..\Src\gyro97B.c</FilePath>
             </File>
             <File>
+              <FileName>nst1001.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\nst1001.c</FilePath>
+            </File>
+            <File>
               <FileName>encoder.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\encoder.c</FilePath>
