@@ -8,7 +8,7 @@
  * Author   : WangYu
  *
  **********************************************************************/
-#include <stdio.h>
+
 #include "stm32f4xx_hal.h"
 
 extern UART_HandleTypeDef huart2;
@@ -29,4 +29,4 @@ void PRINTF(const char *format, ...)
 {
 }
 
-#endif
+#endif /* DEBUG */

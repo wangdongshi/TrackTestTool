@@ -12,11 +12,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "debug.h"
-#include "stm32f4xx_hal.h"
 #include "cmsis_os.h"
+#include "stm32f4xx_hal.h"
+#include "calibrator.h"
 #include "ad7608.h"
 #include "comm.h"
-#include "calibrator.h"
 
 /* Private macro -------------------------------------------------------------*/
 

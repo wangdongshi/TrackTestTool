@@ -14,11 +14,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "cmsis_os.h"
-#include "stm32f4xx_hal_uart.h"
 #include "ad7608.h"
 #include "encoder.h"
 #include "comm.h"
 #include "crc.h"
+#include "stm32f4xx_hal_uart.h"
 
 /* Private macro -------------------------------------------------------------*/
 #define COMM_TX_BUFFER_SIZE     200

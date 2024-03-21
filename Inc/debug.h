@@ -11,17 +11,19 @@
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
 
+#include <stdio.h>
+
+#define ASSERT
 #define DEBUG
 
 #ifdef DEBUG
 
-#include <stdio.h>
 #define PRINTF   printf
 
 #else
 
 void PRINTF(const char *format, ...);
 
-#endif
+#endif /* DEBUG */
 
 #endif // __DEBUG_H__
