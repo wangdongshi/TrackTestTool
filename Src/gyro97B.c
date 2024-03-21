@@ -46,7 +46,7 @@ volatile uint64_t gyro_count[2] = {0, 0};
 /* Formal function definitions -----------------------------------------------*/
 void startGyro(void)
 {
-  HAL_StatusTypeDef status;
+  volatile HAL_StatusTypeDef status;
   
   meas.omega1 = 0.0f - gyro_zero_offset[0];
   meas.omega2 = 0.0f - gyro_zero_offset[1];

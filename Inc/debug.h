@@ -15,6 +15,7 @@
 
 #ifdef DEBUG
 
+#include <stdio.h>
 #define PRINTF   printf
 
 #else

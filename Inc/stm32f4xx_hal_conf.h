@@ -5,7 +5,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2023 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2024 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -426,10 +426,6 @@
 #endif /* HAL_LPTIM_MODULE_ENABLED */
    
 /* Exported macro ------------------------------------------------------------*/
-#include "stm32_assert.h"
-
-#if 0 // Delete by WangYu 2023/7/5
-
 #ifdef  USE_FULL_ASSERT
 /**
   * @brief  The assert_param macro is used for function's parameters check.
@@ -445,9 +441,7 @@
 #else
   #define assert_param(expr) ((void)0U)
 #endif /* USE_FULL_ASSERT */    
-
-#endif
-
+  
 #ifdef __cplusplus
 }
 #endif

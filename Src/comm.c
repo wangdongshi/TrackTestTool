@@ -62,7 +62,7 @@ static HAL_StatusTypeDef HAL_UART_RX_Reset(UART_HandleTypeDef *huart, uint8_t *p
 /* Formal function definitions -----------------------------------------------*/
 void startCommunication(void)
 {
-  HAL_StatusTypeDef status;
+  volatile HAL_StatusTypeDef status;
   
   __HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
   
@@ -169,7 +169,7 @@ void uart2RxCallback(void)
   osSemaphoreRelease(UserCommandArriveSemHandle);
 
   // Recover UART2 RX DMA transfer
-  HAL_StatusTypeDef status;
+  volatile HAL_StatusTypeDef status;
   memset(rxBuffer, 0, COMM_RX_BUFFER_SIZE);
   status = HAL_UART_Receive_DMA(&huart2, rxBuffer, COMM_RX_BUFFER_SIZE);
   assert_param(status == HAL_OK);

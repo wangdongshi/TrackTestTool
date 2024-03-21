@@ -166,6 +166,14 @@ standard names. */
 
 /* USER CODE BEGIN Defines */   	      
 /* Section where parameter definitions can be added (for instance, to override default ones in FreeRTOS.h) */
+#undef  __MPU_PRESENT
+#undef  __NVIC_PRIO_BITS
+#undef  __Vendor_SysTickConfig
+#undef  __FPU_PRESENT
+#define __MPU_PRESENT             1       /*!< STM32F4XX provides an MPU                     */
+#define __NVIC_PRIO_BITS          4       /*!< STM32F4XX uses 4 Bits for the Priority Levels */
+#define __Vendor_SysTickConfig    0       /*!< Set to 1 if different SysTick Config is used  */
+#define __FPU_PRESENT             1
 /* USER CODE END Defines */ 
 
 #endif /* FREERTOS_CONFIG_H */

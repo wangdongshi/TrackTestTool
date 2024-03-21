@@ -47,8 +47,8 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\TrackTestTool\</OutputDirectory>
-          <OutputName>TrackTest</OutputName>
+          <OutputDirectory>TrackTestTool\</OutputDirectory>
+          <OutputName>TrackTestTool</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -330,9 +330,9 @@
             <vShortWch>1</vShortWch>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_FULL_ASSERT,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32F407xx</Define>
+              <Define>USE_HAL_DRIVER,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;                                           ../Drivers/STM32F4xx_HAL_Driver/Inc;                                           ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                                           ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                                           ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                                           ../Middlewares/Third_Party/FreeRTOS/Source/include;                                           ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                                           ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Drivers/CMSIS/Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -386,19 +386,29 @@
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
-              <FileName>debug.c</FileName>
+              <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Src\debug.c</FilePath>
+              <FilePath>../Src/main.c</FilePath>
             </File>
             <File>
-              <FileName>crc.c</FileName>
+              <FileName>freertos.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Src\crc.c</FilePath>
+              <FilePath>../Src/freertos.c</FilePath>
             </File>
             <File>
-              <FileName>comm.c</FileName>
+              <FileName>stm32f4xx_it.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Src\comm.c</FilePath>
+              <FilePath>../Src/stm32f4xx_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_hal_msp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/stm32f4xx_hal_msp.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_hal_timebase_TIM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>../Src/stm32f4xx_hal_timebase_TIM.c</FilePath>
             </File>
             <File>
               <FileName>ad7608.c</FileName>
@@ -453,6 +463,26 @@
               </FileOption>
             </File>
             <File>
+              <FileName>comm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\comm.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\crc.c</FilePath>
+            </File>
+            <File>
+              <FileName>debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\encoder.c</FilePath>
+            </File>
+            <File>
               <FileName>gyro97B.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\gyro97B.c</FilePath>
@@ -461,36 +491,6 @@
               <FileName>nst1001.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\nst1001.c</FilePath>
-            </File>
-            <File>
-              <FileName>encoder.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\encoder.c</FilePath>
-            </File>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/main.c</FilePath>
-            </File>
-            <File>
-              <FileName>freertos.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/freertos.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_it.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/stm32f4xx_it.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_hal_msp.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/stm32f4xx_hal_msp.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_hal_timebase_TIM.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Src/stm32f4xx_hal_timebase_TIM.c</FilePath>
             </File>
           </Files>
         </Group>

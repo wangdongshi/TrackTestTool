@@ -4,7 +4,7 @@
   * @brief   Interrupt Service Routines.
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2023 STMicroelectronics
+  * COPYRIGHT(c) 2024 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -42,6 +42,7 @@
 extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim4;
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -256,7 +257,7 @@ void USART2_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-  
+
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   /* USER CODE BEGIN USART3_IRQn 1 */
@@ -312,7 +313,7 @@ void DMA2_Stream1_IRQHandler(void)
 void USART6_IRQHandler(void)
 {
   /* USER CODE BEGIN USART6_IRQn 0 */
-  
+
   /* USER CODE END USART6_IRQn 0 */
   HAL_UART_IRQHandler(&huart6);
   /* USER CODE BEGIN USART6_IRQn 1 */

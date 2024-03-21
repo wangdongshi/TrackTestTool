@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2023 STMicroelectronics International N.V. 
+  * Copyright (c) 2024 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -89,10 +89,6 @@ osSemaphoreId EncoderArriveSemHandle;
 osSemaphoreId UserCommandArriveSemHandle;
 
 /* USER CODE BEGIN PV */
-/* Private macro -------------------------------------------------------------*/
-
-/* Private structs -----------------------------------------------------------*/
-
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim7; // ADC sampling driver
 TIM_HandleTypeDef htim5; // speed sensor
@@ -238,7 +234,7 @@ int main(void)
   MONITOR_TASKHandle = osThreadCreate(osThread(MONITOR_TASK), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add tasks, ... */
+  /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -505,10 +501,10 @@ static void MX_GPIO_Init(void)
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
 
   /**/
-  LL_GPIO_ResetOutputPin(GPIOC, LED1_Pin|ADC_CONVST_Pin);
+  LL_GPIO_ResetOutputPin(LED1_GPIO_Port, LED1_Pin);
 
   /**/
-  LL_GPIO_ResetOutputPin(GPIOA, RS485_REDE_Pin|ADC_RESET_Pin);
+  LL_GPIO_ResetOutputPin(GPIOA, ADC_CONVST_Pin|RS485_REDE_Pin|ADC_RESET_Pin);
 
   /**/
   GPIO_InitStruct.Pin = NST3_Pin;
@@ -520,15 +516,15 @@ static void MX_GPIO_Init(void)
   LL_GPIO_Init(NST3_GPIO_Port, &GPIO_InitStruct);
 
   /**/
-  GPIO_InitStruct.Pin = LED1_Pin|ADC_CONVST_Pin;
+  GPIO_InitStruct.Pin = LED1_Pin;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
   GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-  LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  LL_GPIO_Init(LED1_GPIO_Port, &GPIO_InitStruct);
 
   /**/
-  GPIO_InitStruct.Pin = RS485_REDE_Pin|ADC_RESET_Pin;
+  GPIO_InitStruct.Pin = ADC_CONVST_Pin|RS485_REDE_Pin|ADC_RESET_Pin;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
   GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -763,7 +759,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     uart6RxCallback();
   }
 }
-
 /* USER CODE END 4 */
 
 /* mainTask function */
@@ -906,7 +901,7 @@ void assert_failed(uint8_t* file, uint32_t line)
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-	printf("Wrong parameters value : file %s on line %d.\r\n", file, (int)line);
+  printf("Wrong parameters value : file %s on line %d.\r\n", file, (int)line);
 	while(1);
   /* USER CODE END 6 */
 }

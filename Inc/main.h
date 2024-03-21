@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2023 STMicroelectronics International N.V. 
+  * Copyright (c) 2024 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -73,6 +73,8 @@
 #define NST3_GPIO_Port GPIOE
 #define LED1_Pin LL_GPIO_PIN_13
 #define LED1_GPIO_Port GPIOC
+#define ADC_CONVST_Pin LL_GPIO_PIN_0
+#define ADC_CONVST_GPIO_Port GPIOA
 #define RS485_REDE_Pin LL_GPIO_PIN_1
 #define RS485_REDE_GPIO_Port GPIOA
 #define RS485_TX_Pin LL_GPIO_PIN_2
@@ -87,8 +89,6 @@
 #define ADC_DOUTA_GPIO_Port GPIOA
 #define ADC_RESET_Pin LL_GPIO_PIN_7
 #define ADC_RESET_GPIO_Port GPIOA
-#define ADC_CONVST_Pin LL_GPIO_PIN_4
-#define ADC_CONVST_GPIO_Port GPIOC
 #define ADC_BUSY_Pin LL_GPIO_PIN_5
 #define ADC_BUSY_GPIO_Port GPIOC
 #define ENCODER_A_Pin LL_GPIO_PIN_9
@@ -124,6 +124,8 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
+#undef HSE_VALUE
+#define HSE_VALUE    8000000U
 
 typedef struct _meas {
   float mileage;      // measure by encoder
@@ -141,7 +143,6 @@ typedef struct _meas {
   float omega2;       // measure by gyro2
   uint32_t sequence;
 } TRACK_MEAS_ITEM;
-
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
