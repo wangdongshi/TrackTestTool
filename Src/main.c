@@ -82,19 +82,19 @@ osThreadId ADC_TASKHandle;
 osThreadId SENSOR_TASKHandle;
 osThreadId COMM_TASKHandle;
 osThreadId MONITOR_TASKHandle;
+osMutexId ADCSamplingMutexHandle;
 osMutexId UserCommandMutexHandle;
 osSemaphoreId AdcConvertStartSemHandle;
 osSemaphoreId AdcConvertCompleteSemHandle;
 osSemaphoreId EncoderArriveSemHandle;
 osSemaphoreId UserCommandArriveSemHandle;
+osSemaphoreId UserCommandProcessSemHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim7; // ADC sampling driver
 TIM_HandleTypeDef htim5; // speed sensor
 TIM_HandleTypeDef htim4; // temperature sensor
-osMutexId ADCSamplingMutexHandle;
-osSemaphoreId UserCommandProcessSemHandle;
 
 TRACK_MEAS_ITEM meas = {0.0f};
 uint8_t         format = OUTPUT_JUSTFLOAT;
@@ -175,14 +175,16 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Create the mutex(es) */
+  /* definition and creation of ADCSamplingMutex */
+  osMutexDef(ADCSamplingMutex);
+  ADCSamplingMutexHandle = osMutexCreate(osMutex(ADCSamplingMutex));
+
   /* definition and creation of UserCommandMutex */
   osMutexDef(UserCommandMutex);
   UserCommandMutexHandle = osMutexCreate(osMutex(UserCommandMutex));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
-  osMutexDef(ADCSamplingMutex);
-  ADCSamplingMutexHandle = osMutexCreate(osMutex(ADCSamplingMutex));
   /* USER CODE END RTOS_MUTEX */
 
   /* Create the semaphores(s) */
@@ -202,10 +204,12 @@ int main(void)
   osSemaphoreDef(UserCommandArriveSem);
   UserCommandArriveSemHandle = osSemaphoreCreate(osSemaphore(UserCommandArriveSem), 1);
 
+  /* definition and creation of UserCommandProcessSem */
+  osSemaphoreDef(UserCommandProcessSem);
+  UserCommandProcessSemHandle = osSemaphoreCreate(osSemaphore(UserCommandProcessSem), 1);
+
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
-  osSemaphoreDef(UserCommandProcess);
-  UserCommandProcessSemHandle = osSemaphoreCreate(osSemaphore(UserCommandProcess), 1);
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
