@@ -89,7 +89,6 @@ osThreadId MONITOR_TASKHandle;
 osMutexId ADCSamplingMutexHandle;
 osMutexId UserCommandMutexHandle;
 osSemaphoreId AdcConvertStartSemHandle;
-osSemaphoreId AdcConvertCompleteSemHandle;
 osSemaphoreId EncoderArriveSemHandle;
 osSemaphoreId UserCommandArriveSemHandle;
 osSemaphoreId UserCommandProcessSemHandle;
@@ -97,11 +96,12 @@ osSemaphoreId UserCommandProcessSemHandle;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-/* TIM1 : Encoder             */
-/* TIM6 : HAL conter          */
-/* TIM4 : Temperature sensor  */
-/* TIM5 : Speed sensor        */ 
-/* TIM7 : ADC sampling driver */
+/* TIM1 : Encoder                  */
+/* TIM2 : ADC sampling trigger     */
+/* TIM3 : ADC data reading trigger */
+/* TIM6 : HAL conter               */
+/* TIM4 : Temperature sensor       */
+/* TIM5 : Speed sensor             */
 
 TRACK_MEAS_ITEM meas = {0.0f};
 uint8_t         format = OUTPUT_JUSTFLOAT;
@@ -204,10 +204,6 @@ int main(void)
   /* definition and creation of AdcConvertStartSem */
   osSemaphoreDef(AdcConvertStartSem);
   AdcConvertStartSemHandle = osSemaphoreCreate(osSemaphore(AdcConvertStartSem), 1);
-
-  /* definition and creation of AdcConvertCompleteSem */
-  osSemaphoreDef(AdcConvertCompleteSem);
-  AdcConvertCompleteSemHandle = osSemaphoreCreate(osSemaphore(AdcConvertCompleteSem), 1);
 
   /* definition and creation of EncoderArriveSem */
   osSemaphoreDef(EncoderArriveSem);
@@ -924,15 +920,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   if (htim->Instance == TIM1) {
     encoderCallback();
   }
-  else if (htim->Instance == TIM7) {
-    osSemaphoreRelease(AdcConvertStartSemHandle);
-  }
   else if (htim->Instance == TIM5) {
     speedTimerOverflow();
   }
   else if (htim->Instance == TIM3) {
     // LL_GPIO_TogglePin(TEST_GPIO_Port, TEST_Pin); // for test TIM3 slave mode
-    startADCDataReceive();
+    osSemaphoreRelease(AdcConvertStartSemHandle);
   }
   /* USER CODE END Callback 1 */
 }

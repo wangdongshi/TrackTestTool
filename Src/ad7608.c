@@ -52,7 +52,6 @@ extern TIM_HandleTypeDef htim3;
 extern SPI_HandleTypeDef hspi1;
 extern osMutexId ADCSamplingMutexHandle;
 extern osSemaphoreId AdcConvertStartSemHandle;
-extern osSemaphoreId AdcConvertCompleteSemHandle;
 extern TRACK_MEAS_ITEM meas;
 extern WORK_MODE workMode;
 extern DATA_MODE dataMode;
@@ -69,97 +68,64 @@ static float filteredVol[AD7608_CH_NUMBER]; // filtered ADC data (length = 18 bi
 
 
 /* Private function prototypes -----------------------------------------------*/
-static void AD7608_RESET(void);
-static void AD7608_TRIGGER(void);
-static void Delay(uint32_t nCount);
+static void resetADC(void);
+static void cacheADCData(void);
+
 static void movingAverageFilter(const float* xn, float* yn);
 static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, const float* pArray);
 static void filterVoltage(void);
 static float calibrateADCData(ADC_CAL item, float raw);
 
 /* Formal function definitions -----------------------------------------------*/
-#if 0
 void adcTask(void const * argument)
 {
-  AD7608_RESET();
+  resetADC();
   
   while(1) {
-    osSemaphoreWait(AdcConvertStartSemHandle, osWaitForever);
-    //PRINTF("Timer7(5ms) come!\r\n");
-    
-    AD7608_TRIGGER();
-    // Over Sampling    BUSY_time(Max.)
-    //     OFF             4.15 us
-    //     x2              9.1  us
-    //     x4              18.8 us
-    //     x8              39   us
-    //     x16             78   us
-    //     x32             158  us
-    //     x64             315  us
-    // During the waiting period for the BUSY signal, 
-    // system control can be given up initially, 
-    // but even if 64x oversampling is turned on, 
-    // the longest waiting time does not exceed 1ms, 
-    // which is less than the operating system scheduling interval, 
-    // so 1ms delay is used for handing over system control.
-    osDelay(1);
-    while(AD7608_BUSY) {};
-      
-    HAL_SPI_Receive_DMA(&hspi1, buff, sizeof(buff));
-    osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
-      
+    // ADC sampling triggered by TIM2-CH1's PWM
+    // ADC data reading triggered in the TIM3 interrupt (TIM2-CH1's slave)
+    osSemaphoreWait(AdcConvertStartSemHandle, osWaitForever); // Send by TIM3 interrupt
+    HAL_SPI_Receive_DMA(&hspi1, buff, sizeof(buff)); // read previous ADC data
+    cacheADCData();
     filterVoltage();
   }
 }
-#else
-
-void adcTask(void const * argument)
-{
-  AD7608_RESET();
-  while(1) {
-    osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
-    filterVoltage();
-  }
-}
-
-#endif
 
 void startADC(void)
 {
-  //initFilter();
+  initFilter();
+  // Over Sampling    BUSY_time(Max.)
+  //     OFF             4.15 us
+  //     x2              9.1  us
+  //     x4              18.8 us
+  //     x8              39   us
+  //     x16             78   us
+  //     x32             158  us
+  //     x64             315  us
+  // During the waiting period for the BUSY signal, 
+  // system control can be given up initially, 
+  // but even if 64x oversampling is turned on, 
+  // the longest waiting time does not exceed 1ms, 
+  // which is less than the operating system scheduling interval, 
+  // so 1ms delay is used for handing over system control.
   
-  //HAL_TIM_Base_Start_IT(&htim7); // start 5ms cyclic timer
-  
+  // Now the ADC has enabled 64 bit hardware over-sampling, 
+  // and a single ADC sampling takes 315us. 
+  // In order to facilitate the calculation of software filtering, 
+  // we take 400us as a sampling period, and the data reading operation 
+  // is also set in one sampling period (reading the previous sampling data).
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   HAL_TIM_Base_Start_IT(&htim3);
 }
 
-void startADCDataReceive(void)
-{
-  HAL_SPI_Receive_DMA(&hspi1, buff, sizeof(buff));
-}
-
-static void AD7608_RESET(void)
+static void resetADC(void)
 {
   AD7608_RESET_H;
-  Delay(0xFF);
+  for (uint16_t i = 0xFF; i != 0; i--);
   AD7608_RESET_L;
 }
 
-static void AD7608_TRIGGER(void)
-{
-  AD7608_CONVSTA_L;
-  Delay(0xF); // TODO : If the running time is insufficient, 
-              //        the delay need change to the OS delay here.  
-  AD7608_CONVSTA_H;
-}
-
-static void Delay(uint32_t nCount) 
-{ 
-  for(; nCount != 0; nCount--); 
-}
-
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+static void cacheADCData(void)
 {
   //adcCnt++;
   
@@ -186,8 +152,6 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
     if (i == 7) PRINTF("\r\n");
   }
 #endif
-  
-  osSemaphoreRelease(AdcConvertCompleteSemHandle);
 }
 
 static void filterVoltage(void)
@@ -387,4 +351,8 @@ static float getNoiseSum(const uint32_t deepth, const uint32_t noiseNum, const f
   }
   
   return noiseSum;
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
 }
