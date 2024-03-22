@@ -47,7 +47,8 @@
 #define PI                               3.1415926f
 
 /* External Variables --------------------------------------------------------*/
-extern TIM_HandleTypeDef htim7;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 extern SPI_HandleTypeDef hspi1;
 extern osMutexId ADCSamplingMutexHandle;
 extern osSemaphoreId AdcConvertStartSemHandle;
@@ -77,6 +78,7 @@ static void filterVoltage(void);
 static float calibrateADCData(ADC_CAL item, float raw);
 
 /* Formal function definitions -----------------------------------------------*/
+#if 0
 void adcTask(void const * argument)
 {
   AD7608_RESET();
@@ -109,12 +111,32 @@ void adcTask(void const * argument)
     filterVoltage();
   }
 }
+#else
+
+void adcTask(void const * argument)
+{
+  AD7608_RESET();
+  while(1) {
+    osSemaphoreWait(AdcConvertCompleteSemHandle, osWaitForever);
+    filterVoltage();
+  }
+}
+
+#endif
 
 void startADC(void)
 {
-  initFilter();
+  //initFilter();
   
-  HAL_TIM_Base_Start_IT(&htim7); // start 5ms cyclic timer
+  //HAL_TIM_Base_Start_IT(&htim7); // start 5ms cyclic timer
+  
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_Base_Start_IT(&htim3);
+}
+
+void startADCDataReceive(void)
+{
+  HAL_SPI_Receive_DMA(&hspi1, buff, sizeof(buff));
 }
 
 static void AD7608_RESET(void)

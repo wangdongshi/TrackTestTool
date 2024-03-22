@@ -73,6 +73,8 @@
 #define NST3_GPIO_Port GPIOE
 #define LED1_Pin LL_GPIO_PIN_13
 #define LED1_GPIO_Port GPIOC
+#define TEST_Pin LL_GPIO_PIN_1
+#define TEST_GPIO_Port GPIOC
 #define ADC_CONVST_Pin LL_GPIO_PIN_0
 #define ADC_CONVST_GPIO_Port GPIOA
 #define RS485_REDE_Pin LL_GPIO_PIN_1
