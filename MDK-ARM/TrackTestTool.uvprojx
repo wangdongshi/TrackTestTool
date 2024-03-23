@@ -468,6 +468,11 @@
               <FilePath>..\Src\comm.c</FilePath>
             </File>
             <File>
+              <FileName>compute.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\compute.c</FilePath>
+            </File>
+            <File>
               <FileName>crc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\crc.c</FilePath>

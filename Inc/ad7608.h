@@ -11,7 +11,11 @@
 #ifndef __ADC7608_H__
 #define __ADC7608_H__
 
-#define AD7608_CH_NUMBER 8
+#include "stm32f4xx_hal.h"
+
+#define AD7608_CH_NUMBER            8
+#define AD7608_CH_DATA_RESOLUTION   18
+#define AD7608_DMA_BUFFER_LENGTH    (AD7608_CH_NUMBER * AD7608_CH_DATA_RESOLUTION / 8)
 
 typedef enum {
   TRACK_DIST_COMP = 0,

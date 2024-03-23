@@ -118,7 +118,7 @@ void commTask(void const * argument)
         break;
       case COMM_SET_FILTER_MODE:
         filterDeepth = swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
-        filterDeepth = (filterDeepth > 64) ? 0 : filterDeepth;
+        filterDeepth = (filterDeepth > 32) ? 32 : filterDeepth;
         filterDeepth = ((filterDeepth & (filterDeepth - 1)) == 0) ? filterDeepth : 0; // must be 2 to the Nth power
         initFilter();
         break;
