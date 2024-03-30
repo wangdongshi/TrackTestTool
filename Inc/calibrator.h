@@ -39,8 +39,8 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
 #define GYRO_SCALE_FACTOR2                89942.9f  // gyro2 : use for yaw angle test     (unit : degree/s)
 
 // Tilt sensor
-#define TILT_SCALE_FACTOR                   17.96f
-#define TILT_AXIS_MISALIGNMENT_ANGLE          0.0f
+#define TILT_SCALE_FACTOR                   18.0069f
+#define TILT_AXIS_MISALIGNMENT_ANGLE        0.0f
 
 // Calibration data
 #define CAL_TBL_DATA {                   \
