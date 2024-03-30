@@ -841,7 +841,7 @@ void mainTask(void const * argument)
     else {
       // The data rate output to the host computer cannot be faster than 10ms. 
       // otherwise other tasks cannot be completed in the printing interval.
-      osDelay(45);
+      osDelay(5);
     }
     meas.sequence++;
     prepareSensorData();

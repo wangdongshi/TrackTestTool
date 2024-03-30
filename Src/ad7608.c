@@ -38,7 +38,7 @@
 
 #define INERTIAL_SENSOR_ZERO_OUTPUT      2.50f              // 2.47 to 2.53
 #define CIRCULAR_ANGLE_DEGREE            360.0f             // Unit : degree
-#define STANDARD_TRACK_DISTANCE          1435.0f            // Unit : mm
+#define STANDARD_TRACK_DISTANCE          1505.0f            // Unit : mm
 #define PI                               3.1415926f
 
 /* External Variables --------------------------------------------------------*/
