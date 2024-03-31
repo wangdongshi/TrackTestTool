@@ -54,12 +54,15 @@
 /* USER CODE BEGIN Includes */
 #include <math.h>
 #include "debug.h"
+#include "fir.h"
 #include "comm.h"
 #include "calibrator.h"
 #include "ad7608.h"
 #include "gyro97B.h"
 #include "encoder.h"
 #include "nst1001.h"
+
+//#define FIR_TEST
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -826,6 +829,9 @@ void mainTask(void const * argument)
   
   assert_param(1 == 1); // for test assert
   PRINTF("Welcome to STM32F407VET6 Core Board!\r\n");
+#ifdef FIR_TEST
+  fir_test();
+#endif
   
   initData();
   startGyro();
