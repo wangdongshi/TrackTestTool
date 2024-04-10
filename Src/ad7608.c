@@ -50,6 +50,7 @@ extern osSemaphoreId AdcConvertStartSemHandle;
 extern float vol[AD7608_CH_NUMBER];
 extern TRACK_MEAS_ITEM meas;
 extern WORK_MODE workMode;
+extern uint32_t rollADC;
 
 /* Private Variables ---------------------------------------------------------*/
 const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
@@ -130,6 +131,7 @@ void prepareSensorData(void)
   meas.height_comp  = vol[TRACK_HEIGHT_COMP];
   meas.distance     = vol[TRACK_DISTANCE];
   meas.battery      = vol[TRACK_BATTERY_VOLTAGE] * 2.0f;
+  meas.rollADC      = rollADC;
   
   // calculate dip angle and track height
   // Angle = arcsin((E0-Eb)/SF)-Theta
