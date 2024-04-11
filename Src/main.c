@@ -403,7 +403,7 @@ static void MX_TIM2_Init(void)
   TIM_OC_InitTypeDef sConfigOC;
 
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 336-1;
+  htim2.Init.Prescaler = 840-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 100-1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -431,7 +431,7 @@ static void MX_TIM2_Init(void)
   }
 
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 88;
+  sConfigOC.Pulse = 80;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -579,7 +579,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 921600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -780,6 +780,15 @@ static void sendData2PC(void)
               meas.sequence
       );
     }
+    else if (dataMode == DATA_TEST) {
+      PRINTF2("DATA : %.3f,\t%.4f,\t%.4f,\t%d,\t%d\r\n",      
+              meas.mileage,
+              meas.height,
+              meas.roll,
+              meas.rollADC,
+              meas.sequence
+      );
+    }
     else if (dataMode == DATA_ADC_RAW) {
       PRINTF2("DATA : %d, %d, %d, %d, %d, %d, %d, %d\r\n",
               *(int32_t*)(&outputADVal[0]),
@@ -845,9 +854,10 @@ void mainTask(void const * argument)
       osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     }
     else {
+      int delay = (dataMode == DATA_TEST) ? 1 : 5;
       // The data rate output to the host computer cannot be faster than 10ms. 
       // otherwise other tasks cannot be completed in the printing interval.
-      osDelay(5);
+      osDelay(delay);
     }
     meas.sequence++;
     prepareSensorData();

@@ -32,6 +32,7 @@ extern float filteredVol[AD7608_CH_NUMBER]; // Can not define here!!
 extern DATA_MODE dataMode;
 
 /* Private Variables */
+uint32_t rollADC = 0;
 uint16_t filterDeepth = 0;
 static uint16_t noisePtsNumber = 0;
 float vol[AD7608_CH_NUMBER] = {0.0f};
@@ -65,6 +66,9 @@ static void filterVoltage(void)
              ADC_VOLTAGE_TRANSFER_FACTOR;
   }
   
+  // backup roll ADC data
+  rollADC = adc[TRACK_DIP_A1];
+  
   // filter process
   if (filterDeepth != 0) { // execute moving average filter
     // TODO : If other types of filters are used, past ADC sample values 
@@ -87,7 +91,7 @@ static void filterVoltage(void)
   }
   
   // copy filtered data to voltage buffer
-  if (filterDeepth != 0) memcpy((void*)vol, (void*)filteredVol, sizeof(vol));
+  if (filterDeepth != 0) memcpy((void*)vol, (void*)filteredVol, sizeof(filteredVol));
 }
 
 static void cacheADCData(void)
