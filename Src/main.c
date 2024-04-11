@@ -848,7 +848,7 @@ void mainTask(void const * argument)
       osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
     }
     else {
-      int delay = (dataMode == DATA_TEST) ? 1 : 50;
+      int delay = (dataMode == DATA_TEST) ? 1 : 5;
       // The data rate output to the host computer cannot be faster than 10ms. 
       // otherwise other tasks cannot be completed in the printing interval.
       osDelay(delay);
