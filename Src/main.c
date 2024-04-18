@@ -781,11 +781,11 @@ static void sendData2PC(void)
       );
     }
     else if (dataMode == DATA_TEST) {
-      PRINTF2("DATA : %.3f,\t%.4f,\t%.4f,\t%d,\t%d\r\n",      
+      PRINTF2("DATA : %.3f,\t%.4f,\t%.4f,\t%.4f,\t%d\r\n",      
               meas.mileage,
               meas.height,
+              meas.height_comp,
               meas.roll,
-              meas.rollADC,
               meas.sequence
       );
     }
