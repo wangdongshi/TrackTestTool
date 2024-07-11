@@ -169,7 +169,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGTARM</Key>
-          <Name>(1010=-1,-1,-1,-1,0)(1007=-1,-1,-1,-1,0)(1008=-1,-1,-1,-1,0)(1009=-1,-1,-1,-1,0)</Name>
+          <Name>(1010=-1,-1,-1,-1,0)(1007=-975,-708,-798,-443,0)(1008=-1,-1,-1,-1,0)(1009=-1,-1,-1,-1,0)(1012=-1,-1,-1,-1,0)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -201,82 +201,76 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>199</LineNumber>
+          <LineNumber>156</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134246242</Address>
+          <Address>134246280</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\宸ヤ綔瀹?閾佽矾宸℃鐢ㄥ皬杞?Firmware\TrackTestTool\Src\compute.c</Filename>
+          <Filename>D:\宸ヤ綔瀹?杞ㄦ浠?Firmware\TrackTestTool\Src\compute.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\TrackTestTool\../Src/compute.c\199</Expression>
+          <Expression>\\TrackTestTool\../Src/compute.c\156</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>805</LineNumber>
+          <LineNumber>308</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134250120</Address>
+          <Address>134244630</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\宸ヤ綔瀹?閾佽矾宸℃鐢ㄥ皬杞?Firmware\TrackTestTool\Src\main.c</Filename>
+          <Filename>D:\宸ヤ綔瀹?杞ㄦ浠?Firmware\TrackTestTool\Src\arm_biquad_cascade_df1_f32.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\TrackTestTool\../Src/main.c\805</Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>805</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134250312</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>D:\宸ヤ綔瀹?閾佽矾宸℃鐢ㄥ皬杞?Firmware\TrackTestTool\Src\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\TrackTestTool\../Src/main.c\805</Expression>
+          <Expression>\\TrackTestTool\../Src/arm_biquad_cascade_df1_f32.c\308</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>meas</ItemText>
+          <ItemText>iirInputBuf</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>meas.roll</ItemText>
+          <ItemText>iirOutputBuf</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>sinRoll</ItemText>
+          <ItemText>iirCoeffs32LP</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>filteredVol[3]</ItemText>
+          <ItemText>iirStateF32</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
-          <ItemText>filteredVol[2]</ItemText>
+          <ItemText>pDst</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>1</WinNumber>
-          <ItemText>filteredVol</ItemText>
+          <ItemText>pDst+1</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>pDst+2</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>pDst+3</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
@@ -509,7 +503,7 @@
 
   <Group>
     <GroupName>Drivers/STM32F4xx_HAL_Driver</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -757,7 +751,7 @@
 
   <Group>
     <GroupName>Drivers/CMSIS</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

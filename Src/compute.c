@@ -13,16 +13,30 @@
 #include <string.h>
 #include "debug.h"
 #include "stm32f4xx_hal.h"
+#include "stm32f407xx.h"
+#include "arm_math.h"
+#include "arm_const_structs.h"
 #include "cmsis_os.h"
 #include "compute.h"
 #include "ad7608.h"
 #include "calibrator.h"
 #include "comm.h"
 
+#include "../Drivers/CMSIS/DSP_Lib/Source/FilteringFunctions/arm_biquad_cascade_df1_init_f32.c"
+#include "../Drivers/CMSIS/DSP_Lib/Source/FilteringFunctions/arm_biquad_cascade_df1_f32.c"
+
 /* Private Macro definition */
-#define ADC_FILTER_MAX_DEPTH             64
-#define ADC_VOLTAGE_NOISE_NUMBER         10                 // 10 max. points and 10 min. points each
-#define ADC_VOLTAGE_TRANSFER_FACTOR     (5.0f / 131072.0f)  // 131072 = 2^17
+//#define ADC_FILTER_MAX_DEPTH             64
+//#define ADC_VOLTAGE_NOISE_NUMBER         10                  // 10 max. points and 10 min. points each
+#define STAGE_NUMBER                       2                   // The number of 2nd order biquad filters
+#define DIP_VOL_DATA_BUFFER_LENGTH         51                  // internal time = 50 ms
+#define ADC_VOLTAGE_TRANSFER_FACTOR        (5.0f / 131072.0f)  // 131072 = 2^17
+#define IIR_SCALE_VALUE                    (0.00024378937689168925f * 0.00023976198256338974f)
+
+const float iirCoeffs32LP[5 * STAGE_NUMBER] = {                                                                                 
+	1.0f,  2.0f,  1.0f,  1.9752696348518730f,  -0.97624479235943995f,
+	1.0f,  2.0f,  1.0f,  1.9426382305401135f,  -0.94359727847036712f                                                                                                
+};  
 
 /* External Variables */
 extern osMutexId ADCSamplingMutexHandle;
@@ -34,16 +48,21 @@ extern DATA_MODE dataMode;
 /* Private Variables */
 uint32_t rollADC = 0;
 uint16_t filterDeepth = 0;
-static uint16_t noisePtsNumber = 0;
+//static uint16_t noisePtsNumber = 0;
 float vol[AD7608_CH_NUMBER] = {0.0f};
 float outputADVal[AD7608_CH_NUMBER] = {0.0f}; // channel data for print to VOFA+
 int32_t adc[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
+static arm_biquad_casd_df1_inst_f32 S;
+static float iirInputBuf[DIP_VOL_DATA_BUFFER_LENGTH]  =  {0.0f};
+static float iirOutputBuf[DIP_VOL_DATA_BUFFER_LENGTH] =  {0.0f};
+static float iirStateF32[4 * STAGE_NUMBER]; // state buffer
 
 /* Private function prototypes */
 static void  cacheADCData(void);
-static void  filterVoltage(void);
-static void  movingAverageFilter(const float* xn, float* yn);
-static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, const float* pArray);
+static void  treatVolData(void);
+static float filterRollVol(float);
+//static void  movingAverageFilter(const float* xn, float* yn);
+//static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, const float* pArray);
 
 /* Formal function definitions */
 void pretreatADCData(void)
@@ -52,46 +71,9 @@ void pretreatADCData(void)
   
   osMutexWait(ADCSamplingMutexHandle, osWaitForever);
   
-  filterVoltage();
+  treatVolData();
   
   osMutexRelease(ADCSamplingMutexHandle);
-}
-
-static void filterVoltage(void)
-{
-  // ADC data(18 bit) --> voltage (-5V to +5V)
-  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
-    //vol[i] = (float)((filteredADC[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
-    vol[i] = (float)((int32_t)(adc[i] ^ 0x00020000) - (int32_t)0x00020000) * 
-             ADC_VOLTAGE_TRANSFER_FACTOR;
-  }
-  
-  // backup roll ADC data
-  rollADC = adc[TRACK_DIP_A1];
-  
-  // filter process
-  if (filterDeepth != 0) { // execute moving average filter
-    // TODO : If other types of filters are used, past ADC sample values 
-    //        need to be calculated together, and a certain length of 
-    //        old sample values need to be cached. 
-    //        Because a simple algorithm of moving average is used here, 
-    //        past sample values are not cached for the time being.
-    movingAverageFilter(vol, filteredVol);
-  }
-  
-  // copy data to print buffer
-  if (dataMode == DATA_ADC_RAW) {
-    memcpy((void*)outputADVal, (void*)adc, sizeof(adc));
-  }
-  else if (dataMode == DATA_VOL_RAW || filterDeepth == 0) {
-    memcpy((void*)outputADVal, (void*)vol, sizeof(vol));
-  }
-  else {
-    memcpy((void*)outputADVal, (void*)filteredVol, sizeof(filteredVol));
-  }
-  
-  // copy filtered data to voltage buffer
-  if (filterDeepth != 0) memcpy((void*)vol, (void*)filteredVol, sizeof(filteredVol));
 }
 
 static void cacheADCData(void)
@@ -124,6 +106,78 @@ static void cacheADCData(void)
 #endif
 }
 
+static void treatVolData(void)
+{
+  // ADC data(18 bit) --> voltage (-5V to +5V)
+  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
+    //vol[i] = (float)((filteredADC[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
+    vol[i] = (float)((int32_t)(adc[i] ^ 0x00020000) - (int32_t)0x00020000) * 
+             ADC_VOLTAGE_TRANSFER_FACTOR;
+  }
+  
+  // backup roll ADC data
+  rollADC = adc[TRACK_DIP_A1];
+  
+  // filter process
+  //if (filterDeepth != 0) { // execute moving average filter
+    // TODO : If other types of filters are used, past ADC sample values 
+    //        need to be calculated together, and a certain length of 
+    //        old sample values need to be cached. 
+    //        Because a simple algorithm of moving average is used here, 
+    //        past sample values are not cached for the time being.
+  //  movingAverageFilter(vol, filteredVol);
+  //}
+  memcpy((void*)filteredVol, (void*)vol, sizeof(vol));
+  if (filterDeepth != 0) {
+    filteredVol[TRACK_DIP_A1] = filterRollVol(vol[TRACK_DIP_A1]);
+  }
+  
+  // copy data to print buffer
+  if (dataMode == DATA_ADC_RAW) {
+    memcpy((void*)outputADVal, (void*)adc, sizeof(adc));
+  }
+  else if (dataMode == DATA_VOL_RAW || filterDeepth == 0) {
+    memcpy((void*)outputADVal, (void*)vol, sizeof(vol));
+  }
+  else {
+    memcpy((void*)outputADVal, (void*)filteredVol, sizeof(filteredVol));
+  }
+  
+  // copy filtered data to voltage buffer
+  if (filterDeepth != 0) memcpy((void*)vol, (void*)filteredVol, sizeof(filteredVol));
+}
+
+void initFilter(void)
+{
+  // clear filter buffer
+  for (int i = 0; i < DIP_VOL_DATA_BUFFER_LENGTH; i++) {
+    iirInputBuf[i]  = 1.65f;
+    iirOutputBuf[i] = 1.65f;
+  }
+  
+  // initialize biquad state
+	arm_biquad_cascade_df1_init_f32(&S, STAGE_NUMBER, (float*)&iirCoeffs32LP[0], (float*)&iirStateF32[0]);
+	
+}
+
+static float filterRollVol(float inVol)
+{
+	float *inputF32  = &iirInputBuf[0];
+  float *outputF32 = &iirOutputBuf[0];
+  
+  // shift buffer and push new voltage data
+  size_t copySize = (DIP_VOL_DATA_BUFFER_LENGTH - 1) * sizeof(float);
+  memcpy(inputF32,  (inputF32  + 1), copySize);
+  memcpy(outputF32, (outputF32 + 1), copySize);
+  inputF32[DIP_VOL_DATA_BUFFER_LENGTH - 1] = inVol;
+  
+  // filter process
+	arm_biquad_cascade_df1_f32(&S, inputF32, outputF32, 1);
+  
+  return iirOutputBuf[0] * IIR_SCALE_VALUE;
+}
+
+/*
 // an implementation of a moving average filter with noise removal
 static int32_t filterIndex = -1;
 static float filterSum[AD7608_CH_NUMBER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
@@ -221,3 +275,4 @@ static float getNoiseSum(const uint32_t deepth, const uint32_t noiseNum, const f
   
   return noiseSum;
 }
+*/
