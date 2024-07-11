@@ -29,7 +29,7 @@
 //#define ADC_FILTER_MAX_DEPTH             64
 //#define ADC_VOLTAGE_NOISE_NUMBER         10                  // 10 max. points and 10 min. points each
 #define STAGE_NUMBER                       2                   // The number of 2nd order biquad filters
-#define DIP_VOL_DATA_BUFFER_LENGTH         51                  // internal time = 50 ms
+#define DIP_VOL_DATA_BUFFER_LENGTH         9                   // internal time = 50 ms
 #define ADC_VOLTAGE_TRANSFER_FACTOR        (5.0f / 131072.0f)  // 131072 = 2^17
 #define IIR_SCALE_VALUE                    (0.00024378937689168925f * 0.00023976198256338974f)
 
@@ -40,6 +40,7 @@ const float iirCoeffs32LP[5 * STAGE_NUMBER] = {
 
 /* External Variables */
 extern osMutexId ADCSamplingMutexHandle;
+extern osMutexId EncoderDelayMutexHandle;
 extern uint8_t buff[2][AD7608_DMA_BUFFER_LENGTH];
 extern uint8_t buffIndex;
 extern float filteredVol[AD7608_CH_NUMBER]; // Can not define here!!
@@ -48,8 +49,10 @@ extern DATA_MODE dataMode;
 /* Private Variables */
 uint32_t rollADC = 0;
 uint16_t filterDeepth = 0;
+uint16_t measBackupFlg = 0;
 //static uint16_t noisePtsNumber = 0;
 float vol[AD7608_CH_NUMBER] = {0.0f};
+float volDelayBuf[AD7608_CH_NUMBER] = {0.0f};
 float outputADVal[AD7608_CH_NUMBER] = {0.0f}; // channel data for print to VOFA+
 int32_t adc[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
 static arm_biquad_casd_df1_inst_f32 S;
@@ -60,6 +63,7 @@ static float iirStateF32[4 * STAGE_NUMBER]; // state buffer
 /* Private function prototypes */
 static void  cacheADCData(void);
 static void  treatVolData(void);
+static void  backupMeasData(void);
 static float filterRollVol(float);
 //static void  movingAverageFilter(const float* xn, float* yn);
 //static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, const float* pArray);
@@ -72,6 +76,10 @@ void pretreatADCData(void)
   osMutexWait(ADCSamplingMutexHandle, osWaitForever);
   
   treatVolData();
+  
+  osMutexWait(EncoderDelayMutexHandle, osWaitForever);
+  backupMeasData();
+  osMutexRelease(EncoderDelayMutexHandle);
   
   osMutexRelease(ADCSamplingMutexHandle);
 }
@@ -145,6 +153,14 @@ static void treatVolData(void)
   
   // copy filtered data to voltage buffer
   if (filterDeepth != 0) memcpy((void*)vol, (void*)filteredVol, sizeof(filteredVol));
+}
+
+void backupMeasData(void)
+{
+  if (measBackupFlg != 0) {
+    memcpy(&volDelayBuf[0], &vol[0], AD7608_CH_NUMBER * sizeof(float));
+    measBackupFlg = 0;
+  }
 }
 
 void initFilter(void)

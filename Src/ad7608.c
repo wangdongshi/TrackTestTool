@@ -48,8 +48,10 @@ extern SPI_HandleTypeDef hspi1;
 extern osMutexId ADCSamplingMutexHandle;
 extern osSemaphoreId AdcConvertStartSemHandle;
 extern float vol[AD7608_CH_NUMBER];
+extern float volDelayBuf[AD7608_CH_NUMBER];
 extern TRACK_MEAS_ITEM meas;
 extern WORK_MODE workMode;
+extern TRIG_MODE trigMode;
 extern uint32_t rollADC;
 
 /* Private Variables ---------------------------------------------------------*/
@@ -127,10 +129,18 @@ void prepareSensorData(void)
   
   // set normal valtage item
   osMutexWait(ADCSamplingMutexHandle, osWaitForever);
-  meas.distance_comp= vol[TRACK_DIST_COMP];
-  meas.height_comp  = vol[TRACK_HEIGHT_COMP];
-  meas.distance     = vol[TRACK_DISTANCE];
-  meas.battery      = vol[TRACK_BATTERY_VOLTAGE] * 2.0f;
+  if (trigMode == TRIG_ENCODER) {
+    meas.distance_comp= volDelayBuf[TRACK_DIST_COMP];
+    meas.height_comp  = volDelayBuf[TRACK_HEIGHT_COMP];
+    meas.distance     = volDelayBuf[TRACK_DISTANCE];
+    meas.battery      = volDelayBuf[TRACK_BATTERY_VOLTAGE] * 2.0f;
+  }
+  else {
+    meas.distance_comp= vol[TRACK_DIST_COMP];
+    meas.height_comp  = vol[TRACK_HEIGHT_COMP];
+    meas.distance     = vol[TRACK_DISTANCE];
+    meas.battery      = vol[TRACK_BATTERY_VOLTAGE] * 2.0f;
+  }
   meas.rollADC      = rollADC;
   
   // calculate dip angle and track height

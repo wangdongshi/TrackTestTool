@@ -86,8 +86,10 @@ osThreadId ADC_TASKHandle;
 osThreadId SENSOR_TASKHandle;
 osThreadId COMM_TASKHandle;
 osThreadId MONITOR_TASKHandle;
+osTimerId EncoderDelayTimerHandle;
 osMutexId ADCSamplingMutexHandle;
 osMutexId UserCommandMutexHandle;
+osMutexId EncoderDelayMutexHandle;
 osSemaphoreId AdcConvertStartSemHandle;
 osSemaphoreId EncoderArriveSemHandle;
 osSemaphoreId UserCommandArriveSemHandle;
@@ -127,6 +129,7 @@ void adcTask(void const * argument);
 void sensorTask(void const * argument);
 void commTask(void const * argument);
 void monitorTask(void const * argument);
+void EncoderDelayTimerCallback(void const * argument);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
@@ -196,6 +199,10 @@ int main(void)
   osMutexDef(UserCommandMutex);
   UserCommandMutexHandle = osMutexCreate(osMutex(UserCommandMutex));
 
+  /* definition and creation of EncoderDelayMutex */
+  osMutexDef(EncoderDelayMutex);
+  EncoderDelayMutexHandle = osMutexCreate(osMutex(EncoderDelayMutex));
+
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -220,6 +227,11 @@ int main(void)
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
+
+  /* Create the timer(s) */
+  /* definition and creation of EncoderDelayTimer */
+  osTimerDef(EncoderDelayTimer, EncoderDelayTimerCallback);
+  EncoderDelayTimerHandle = osTimerCreate(osTimer(EncoderDelayTimer), osTimerOnce, NULL);
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
@@ -908,6 +920,14 @@ void monitorTask(void const * argument)
     else if (workMode == MODE_NORMAL_WORK) osDelay(500);
   }
   /* USER CODE END monitorTask */
+}
+
+/* EncoderDelayTimerCallback function */
+__weak void EncoderDelayTimerCallback(void const * argument)
+{
+  /* USER CODE BEGIN EncoderDelayTimerCallback */
+  
+  /* USER CODE END EncoderDelayTimerCallback */
 }
 
 /**
