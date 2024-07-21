@@ -49,6 +49,8 @@ extern osMutexId ADCSamplingMutexHandle;
 extern osSemaphoreId AdcConvertStartSemHandle;
 extern float vol[AD7608_CH_NUMBER];
 extern float volDelayBuf[AD7608_CH_NUMBER];
+extern uint16_t ultraHighReplaceCnt;
+extern float ultraHighReplaceVal;
 extern TRACK_MEAS_ITEM meas;
 extern WORK_MODE workMode;
 extern TRIG_MODE trigMode;
@@ -144,6 +146,7 @@ void prepareSensorData(void)
   meas.rollADC      = rollADC;
   
   // calculate dip angle and track height
+  if (ultraHighReplaceCnt > 0) vol[TRACK_DIP_A1] = ultraHighReplaceVal;
   // Angle = arcsin((E0-Eb)/SF)-Theta
   sinRoll = (vol[TRACK_DIP_A1] - vol[TRACK_DIP_0] - 
              INERTIAL_SENSOR_ZERO_OUTPUT) / TILT_SCALE_FACTOR;

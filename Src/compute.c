@@ -57,9 +57,12 @@ uint16_t measBackupFlg = 0;
 //static uint16_t noisePtsNumber = 0;
 float vol[AD7608_CH_NUMBER] = {0.0f};
 float volDelayBuf[AD7608_CH_NUMBER] = {0.0f};
-float ultrahighBuf[ULTRA_HIGH_BUFFER_LENGTH] = {0.0f};
 float outputADVal[AD7608_CH_NUMBER] = {0.0f}; // channel data for print to VOFA+
 int32_t adc[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
+float ultraHighReplaceVal = 0.0f;
+uint16_t ultraHighReplaceCnt = 0;
+static float ultraHighBuf[ULTRA_HIGH_BUFFER_LENGTH] = {0.0f};
+static float ultraHighCompBuf[ULTRA_HIGH_BUFFER_LENGTH] = {0.0f};
 static arm_biquad_casd_df1_inst_f32 S;
 static float iirInputBuf[DIP_VOL_DATA_BUFFER_LENGTH]  =  {0.0f};
 static float iirOutputBuf[DIP_VOL_DATA_BUFFER_LENGTH] =  {0.0f};
@@ -68,6 +71,8 @@ static float iirStateF32[4 * STAGE_NUMBER]; // state buffer
 /* Private function prototypes */
 static void  cacheADCData(void);
 static void  treatVolData(void);
+static void  backupUltraHigh(void);
+static void  replaceUltraHigh(void);
 static void  backupMeasData(void);
 static float filterRollVol(float);
 //static void  movingAverageFilter(const float* xn, float* yn);
@@ -82,9 +87,9 @@ void pretreatADCData(void)
   treatVolData();
   osMutexRelease(ADCSamplingMutexHandle);
   
-  osMutexWait(EncoderDelayMutexHandle, osWaitForever);
+  backupUltraHigh();
+  replaceUltraHigh();
   backupMeasData();
-  osMutexRelease(EncoderDelayMutexHandle);
 }
 
 static void cacheADCData(void)
@@ -158,12 +163,43 @@ static void treatVolData(void)
   if (filterDeepth != 0) memcpy((void*)vol, (void*)filteredVol, sizeof(filteredVol));
 }
 
-void backupMeasData(void)
+static void backupUltraHigh(void)
 {
+  size_t size = (ULTRA_HIGH_BUFFER_LENGTH - 1) * sizeof(float);
+  memcpy((void*)&ultraHighBuf[0],     (void*)&ultraHighBuf[1],     size);
+  memcpy((void*)&ultraHighCompBuf[0], (void*)&ultraHighCompBuf[1], size);
+  
+  ultraHighBuf[ULTRA_HIGH_BUFFER_LENGTH - 1]     = vol[TRACK_DIP_A1];
+  ultraHighCompBuf[ULTRA_HIGH_BUFFER_LENGTH - 1] = vol[TRACK_HEIGHT_COMP];
+}
+
+static void  replaceUltraHigh(void)
+{
+  // TODO : Theoretically, the mark of super-high replacement needs to be protected by mutex, 
+  //        but it is not protected here for the time being.
+  if (ultraHighReplaceCnt == 0) {
+    float ultraHighCompDiff = ultraHighCompBuf[ULTRA_HIGH_BUFFER_LENGTH - 1] - 
+      ultraHighCompBuf[ULTRA_HIGH_BUFFER_LENGTH - ULTRA_HIGH_JUDGE_LENGTH];
+    if (fabs(ultraHighCompDiff) > ULTRA_HIGH_SURGE_LIMIT) {
+      ultraHighReplaceCnt = ULTRA_HIGH_SURGE_REPLACE_LENGTH;
+      ultraHighReplaceVal = ultraHighBuf[ULTRA_HIGH_BUFFER_LENGTH - ULTRA_HIGH_JUDGE_LENGTH];
+    }
+  }
+  else {
+    ultraHighReplaceCnt--;
+  }
+}
+  
+static void backupMeasData(void)
+{
+  osMutexWait(EncoderDelayMutexHandle, osWaitForever);
+  
   if (measBackupFlg != 0) {
     memcpy(&volDelayBuf[0], &vol[0], AD7608_CH_NUMBER * sizeof(float));
     measBackupFlg = 0;
   }
+  
+  osMutexRelease(EncoderDelayMutexHandle);
 }
 
 void initFilter(void)
