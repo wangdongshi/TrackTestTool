@@ -71,6 +71,7 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
+TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -86,7 +87,6 @@ osThreadId ADC_TASKHandle;
 osThreadId SENSOR_TASKHandle;
 osThreadId COMM_TASKHandle;
 osThreadId MONITOR_TASKHandle;
-osTimerId EncoderDelayTimerHandle;
 osMutexId ADCSamplingMutexHandle;
 osMutexId UserCommandMutexHandle;
 osMutexId EncoderDelayMutexHandle;
@@ -124,12 +124,12 @@ static void MX_TIM4_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM7_Init(void);
 void mainTask(void const * argument);
 void adcTask(void const * argument);
 void sensorTask(void const * argument);
 void commTask(void const * argument);
 void monitorTask(void const * argument);
-void EncoderDelayTimerCallback(void const * argument);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
                                 
@@ -186,6 +186,7 @@ int main(void)
   MX_TIM5_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   
   /* USER CODE END 2 */
@@ -227,11 +228,6 @@ int main(void)
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
-
-  /* Create the timer(s) */
-  /* definition and creation of EncoderDelayTimer */
-  osTimerDef(EncoderDelayTimer, EncoderDelayTimerCallback);
-  EncoderDelayTimerHandle = osTimerCreate(osTimer(EncoderDelayTimer), osTimerOnce, NULL);
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
@@ -558,6 +554,30 @@ static void MX_TIM5_Init(void)
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* TIM7 init function */
+static void MX_TIM7_Init(void)
+{
+
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim7.Instance = TIM7;
+  htim7.Init.Prescaler = 8400-1;
+  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim7.Init.Period = 500-1;
+  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -922,14 +942,6 @@ void monitorTask(void const * argument)
   /* USER CODE END monitorTask */
 }
 
-/* EncoderDelayTimerCallback function */
-__weak void EncoderDelayTimerCallback(void const * argument)
-{
-  /* USER CODE BEGIN EncoderDelayTimerCallback */
-  
-  /* USER CODE END EncoderDelayTimerCallback */
-}
-
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM6 interrupt took place, inside
@@ -956,6 +968,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   else if (htim->Instance == TIM3) {
     // LL_GPIO_TogglePin(TEST_GPIO_Port, TEST_Pin); // for test TIM3 slave mode
     osSemaphoreRelease(AdcConvertStartSemHandle);
+  }
+  else if (htim->Instance == TIM7) {
+    HAL_TIM_Base_Stop_IT(&htim7);
+    osSemaphoreRelease(EncoderArriveSemHandle);
   }
   /* USER CODE END Callback 1 */
 }

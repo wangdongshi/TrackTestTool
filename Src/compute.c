@@ -32,6 +32,10 @@
 #define DIP_VOL_DATA_BUFFER_LENGTH         9                   // internal time = 50 ms
 #define ADC_VOLTAGE_TRANSFER_FACTOR        (5.0f / 131072.0f)  // 131072 = 2^17
 #define IIR_SCALE_VALUE                    (0.00024378937689168925f * 0.00023976198256338974f)
+#define ULTRA_HIGH_BUFFER_LENGTH           40
+#define ULTRA_HIGH_JUDGE_LENGTH            20     // TODO : must test in actual track
+#define ULTRA_HIGH_SURGE_LIMIT             50.0f  // TODO : must test in actual track
+#define ULTRA_HIGH_SURGE_REPLACE_LENGTH    350    // TODO : must test in actual track
 
 const float iirCoeffs32LP[5 * STAGE_NUMBER] = {                                                                                 
 	1.0f,  2.0f,  1.0f,  1.9752696348518730f,  -0.97624479235943995f,
@@ -53,6 +57,7 @@ uint16_t measBackupFlg = 0;
 //static uint16_t noisePtsNumber = 0;
 float vol[AD7608_CH_NUMBER] = {0.0f};
 float volDelayBuf[AD7608_CH_NUMBER] = {0.0f};
+float ultrahighBuf[ULTRA_HIGH_BUFFER_LENGTH] = {0.0f};
 float outputADVal[AD7608_CH_NUMBER] = {0.0f}; // channel data for print to VOFA+
 int32_t adc[AD7608_CH_NUMBER]; // just received ADC value (raw ADC data)
 static arm_biquad_casd_df1_inst_f32 S;
@@ -74,14 +79,12 @@ void pretreatADCData(void)
   cacheADCData();
   
   osMutexWait(ADCSamplingMutexHandle, osWaitForever);
-  
   treatVolData();
+  osMutexRelease(ADCSamplingMutexHandle);
   
   osMutexWait(EncoderDelayMutexHandle, osWaitForever);
   backupMeasData();
   osMutexRelease(EncoderDelayMutexHandle);
-  
-  osMutexRelease(ADCSamplingMutexHandle);
 }
 
 static void cacheADCData(void)
