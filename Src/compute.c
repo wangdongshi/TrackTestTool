@@ -31,16 +31,26 @@
 #define STAGE_NUMBER                       2                   // The number of 2nd order biquad filters
 #define DIP_VOL_DATA_BUFFER_LENGTH         9                   // internal time = 50 ms
 #define ADC_VOLTAGE_TRANSFER_FACTOR        (5.0f / 131072.0f)  // 131072 = 2^17
-#define IIR_SCALE_VALUE                    (0.00024378937689168925f * 0.00023976198256338974f)
+//#define IIR_SCALE_VALUE                  (0.0000392889647183107440f * 0.0000390248389489221170f)   // cutoff = 2Hz
+#define IIR_SCALE_VALUE                    (0.0000098458979119984636f * 0.0000098126110186609252f) // cutoff = 1Hz
+
 #define ULTRA_HIGH_BUFFER_LENGTH           40
 #define ULTRA_HIGH_JUDGE_LENGTH            20     // TODO : must test in actual track
 #define ULTRA_HIGH_SURGE_LIMIT             50.0f  // TODO : must test in actual track
 #define ULTRA_HIGH_SURGE_REPLACE_LENGTH    350    // TODO : must test in actual track
 
+/*
+// cutoff = 2Hz
 const float iirCoeffs32LP[5 * STAGE_NUMBER] = {                                                                                 
-	1.0f,  2.0f,  1.0f,  1.9752696348518730f,  -0.97624479235943995f,
-	1.0f,  2.0f,  1.0f,  1.9426382305401135f,  -0.94359727847036712f                                                                                                
-};  
+	1.0f,  2.0f,  1.0f,  1.9902712416617285f,  -0.99042839752060186f,
+	1.0f,  2.0f,  1.0f,  1.9768913542871200f,  -0.97704745364291579f                                                                                                
+};
+*/
+// cutoff = 1Hz
+const float iirCoeffs32LP[5 * STAGE_NUMBER] = {                                                                                 
+	1.0f,  2.0f,  1.0f,  1.9951632412838627f,  -0.99520262487551059f,
+	1.0f,  2.0f,  1.0f,  1.9884180173746586f,  -0.98845726781873322f                                                                                                
+};
 
 /* External Variables */
 extern osMutexId ADCSamplingMutexHandle;
