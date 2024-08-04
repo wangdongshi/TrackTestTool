@@ -62,7 +62,7 @@ extern DATA_MODE dataMode;
 
 /* Private Variables */
 uint32_t rollADC = 0;
-uint16_t filterDeepth = 0;
+uint16_t filterDeepth = 2;
 uint16_t measBackupFlg = 0;
 //static uint16_t noisePtsNumber = 0;
 float vol[AD7608_CH_NUMBER] = {0.0f};
