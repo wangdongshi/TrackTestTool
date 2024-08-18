@@ -58,6 +58,7 @@ extern osMutexId EncoderDelayMutexHandle;
 extern uint8_t buff[2][AD7608_DMA_BUFFER_LENGTH];
 extern uint8_t buffIndex;
 extern float filteredVol[AD7608_CH_NUMBER]; // Can not define here!!
+extern WORK_MODE workMode;
 extern DATA_MODE dataMode;
 
 /* Private Variables */
@@ -81,6 +82,7 @@ static float iirStateF32[4 * STAGE_NUMBER]; // state buffer
 /* Private function prototypes */
 static void  cacheADCData(void);
 static void  treatVolData(void);
+static void  removeNoise(void);
 static void  backupUltraHigh(void);
 static void  replaceUltraHigh(void);
 static void  backupMeasData(void);
@@ -144,6 +146,9 @@ static void treatVolData(void)
   // backup roll ADC data
   rollADC = adc[TRACK_DIP_A1];
   
+  // remove noise point
+  if (workMode == MODE_NORMAL_WORK) removeNoise();
+  
   // filter process
   //if (filterDeepth != 0) { // execute moving average filter
     // TODO : If other types of filters are used, past ADC sample values 
@@ -153,6 +158,8 @@ static void treatVolData(void)
     //        past sample values are not cached for the time being.
   //  movingAverageFilter(vol, filteredVol);
   //}
+  
+  // filter process
   memcpy((void*)filteredVol, (void*)vol, sizeof(vol));
   if (filterDeepth != 0) {
     filteredVol[TRACK_DIP_A1] = filterRollVol(vol[TRACK_DIP_A1]);
@@ -171,6 +178,26 @@ static void treatVolData(void)
   
   // copy filtered data to voltage buffer
   if (filterDeepth != 0) memcpy((void*)vol, (void*)filteredVol, sizeof(filteredVol));
+}
+
+#define DENOISE_BUF_DEPTH        10
+#define ADC_VOLTAGE_UPPER_LIMIT  4.9f
+#define ADC_VOLTAGE_LOWER_LIMIT  0.1f
+static float denoiseBuf[AD7608_CH_NUMBER][DENOISE_BUF_DEPTH]; // denoise data buffer
+static void removeNoise(void)
+{
+  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
+    // remove noise data
+    if (i != TRACK_DIP_0) {
+      if (vol[i] < ADC_VOLTAGE_LOWER_LIMIT || vol[i] > ADC_VOLTAGE_UPPER_LIMIT) {
+        vol[i] = denoiseBuf[i][DENOISE_BUF_DEPTH - 1];
+      }
+    }
+    // shift old denoise buffer data
+    for (uint32_t j = 1; j < DENOISE_BUF_DEPTH - 1; j++) denoiseBuf[i][j] = denoiseBuf[i][j - 1];
+    // add current sampling voltage data
+    denoiseBuf[i][DENOISE_BUF_DEPTH - 1] = vol[i];
+  }
 }
 
 static void backupUltraHigh(void)
@@ -214,8 +241,15 @@ static void backupMeasData(void)
 
 void initFilter(void)
 {
+  // clear denoise buffer
+  for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
+    for (int j = 0; j < DENOISE_BUF_DEPTH; j++) {
+      denoiseBuf[i][j] = 2.5f;
+    }
+  }
+  
   // clear filter buffer
-  for (int i = 0; i < DIP_VOL_DATA_BUFFER_LENGTH; i++) {
+  for (uint32_t i = 0; i < DIP_VOL_DATA_BUFFER_LENGTH; i++) {
     iirInputBuf[i]  = 1.65f;
     iirOutputBuf[i] = 1.65f;
   }
