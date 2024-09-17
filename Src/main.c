@@ -98,6 +98,27 @@ osSemaphoreId UserCommandArriveSemHandle;
 osSemaphoreId UserCommandProcessSemHandle;
 
 /* USER CODE BEGIN PV */
+
+#define PROJECT_NAME_LINE1         " ______                    __         _____                        __              \r\n"
+#define PROJECT_NAME_LINE2         "/_  __/  ____ ___ _ ____  / /__      / ___/ ___  ___   __ _  ___  / /_  ____  __ __\r\n"
+#define PROJECT_NAME_LINE3         " / /    / __// _ `// __/ /  '_/     / (_ / / -_)/ _ \ /  ' \/ -_)/ __/ / __/ / // /\r\n"
+#define PROJECT_NAME_LINE4         "/_/    /_/   \_,_/ \__/ /_/\_\      \___/  \__/ \___//_/_/_/\__/ \__/ /_/    \_, / \r\n"
+#define PROJECT_NAME_LINE5         "                                                                            /___/  \r\n"
+
+#define FIRMWARE_VERSION           "0.0.1"
+#define COMPILE_DATE_TIME          __DATE__","__TIME__
+#define PROJECT_NAME               PROJECT_NAME_LINE1\
+                                   PROJECT_NAME_LINE2\
+                                   PROJECT_NAME_LINE3\
+                                   PROJECT_NAME_LINE4\
+                                   PROJECT_NAME_LINE5
+#undef  PROJECT_NAME
+#define PROJECT_NAME               "#### < Track Geometry > ####"
+
+#define BANNER_INFO                "\r\n"PROJECT_NAME"\r\n"\
+                                   "Firmware Version : "FIRMWARE_VERSION"\r\n"\
+                                   "Compilation Time : "COMPILE_DATE_TIME"\r\n\r\n"
+
 /* Private variables ---------------------------------------------------------*/
 
 /* TIM1 : Encoder                  */
@@ -946,7 +967,7 @@ void mainTask(void const * argument)
   /* USER CODE BEGIN 5 */
   
   assert_param(1 == 1); // for test assert
-  PRINTF("Welcome to STM32F407VET6 Core Board!\r\n");
+	printf(BANNER_INFO);
   
   initData();
   startGyro();
