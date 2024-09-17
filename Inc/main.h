@@ -69,10 +69,8 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define NST3_Pin LL_GPIO_PIN_5
-#define NST3_GPIO_Port GPIOE
-#define LED1_Pin LL_GPIO_PIN_13
-#define LED1_GPIO_Port GPIOC
+#define LED_WORKING_Pin LL_GPIO_PIN_2
+#define LED_WORKING_GPIO_Port GPIOE
 #define TEST_Pin LL_GPIO_PIN_1
 #define TEST_GPIO_Port GPIOC
 #define ADC_CONVST_Pin LL_GPIO_PIN_0
@@ -91,12 +89,20 @@
 #define ADC_DOUTA_GPIO_Port GPIOA
 #define ADC_RESET_Pin LL_GPIO_PIN_7
 #define ADC_RESET_GPIO_Port GPIOA
-#define ADC_BUSY_Pin LL_GPIO_PIN_5
+#define ADC_BUSY_Pin LL_GPIO_PIN_4
 #define ADC_BUSY_GPIO_Port GPIOC
+#define BEEP_Pin LL_GPIO_PIN_5
+#define BEEP_GPIO_Port GPIOC
 #define ENCODER_A_Pin LL_GPIO_PIN_9
 #define ENCODER_A_GPIO_Port GPIOE
 #define ENCODER_B_Pin LL_GPIO_PIN_11
 #define ENCODER_B_GPIO_Port GPIOE
+#define EN_NST1_Pin LL_GPIO_PIN_13
+#define EN_NST1_GPIO_Port GPIOE
+#define EN_NST2_Pin LL_GPIO_PIN_14
+#define EN_NST2_GPIO_Port GPIOE
+#define EN_NST3_Pin LL_GPIO_PIN_15
+#define EN_NST3_GPIO_Port GPIOE
 #define GYRO1_TX_Pin LL_GPIO_PIN_10
 #define GYRO1_TX_GPIO_Port GPIOB
 #define GYRO1_RX_Pin LL_GPIO_PIN_11
@@ -105,8 +111,10 @@
 #define IN_DI_A_GPIO_Port GPIOB
 #define IN_DI_B_Pin LL_GPIO_PIN_9
 #define IN_DI_B_GPIO_Port GPIOD
-#define NST2_Pin LL_GPIO_PIN_12
-#define NST2_GPIO_Port GPIOD
+#define ETH_CFG_Pin LL_GPIO_PIN_11
+#define ETH_CFG_GPIO_Port GPIOD
+#define ETH_RST_Pin LL_GPIO_PIN_12
+#define ETH_RST_GPIO_Port GPIOD
 #define GYRO2_TX_Pin LL_GPIO_PIN_6
 #define GYRO2_TX_GPIO_Port GPIOC
 #define GYRO2_RX_Pin LL_GPIO_PIN_7
@@ -115,8 +123,32 @@
 #define DEBUG_TX_GPIO_Port GPIOA
 #define DEBUG_RX_Pin LL_GPIO_PIN_10
 #define DEBUG_RX_GPIO_Port GPIOA
-#define NST1_Pin LL_GPIO_PIN_4
-#define NST1_GPIO_Port GPIOB
+#define GYRO3_TX_Pin LL_GPIO_PIN_10
+#define GYRO3_TX_GPIO_Port GPIOC
+#define GYRO3_RX_Pin LL_GPIO_PIN_11
+#define GYRO3_RX_GPIO_Port GPIOC
+#define GYRO4_TX_Pin LL_GPIO_PIN_12
+#define GYRO4_TX_GPIO_Port GPIOC
+#define SW1_Pin LL_GPIO_PIN_0
+#define SW1_GPIO_Port GPIOD
+#define SW2_Pin LL_GPIO_PIN_1
+#define SW2_GPIO_Port GPIOD
+#define GYRO4_RX_Pin LL_GPIO_PIN_2
+#define GYRO4_RX_GPIO_Port GPIOD
+#define SW3_Pin LL_GPIO_PIN_3
+#define SW3_GPIO_Port GPIOD
+#define SW4_Pin LL_GPIO_PIN_4
+#define SW4_GPIO_Port GPIOD
+#define LED1_Pin LL_GPIO_PIN_5
+#define LED1_GPIO_Port GPIOD
+#define LED2_Pin LL_GPIO_PIN_6
+#define LED2_GPIO_Port GPIOD
+#define LED3_Pin LL_GPIO_PIN_7
+#define LED3_GPIO_Port GPIOD
+#define LED4_Pin LL_GPIO_PIN_4
+#define LED4_GPIO_Port GPIOB
+#define NST_ETR_Pin LL_GPIO_PIN_0
+#define NST_ETR_GPIO_Port GPIOE
 
 /* ########################## Assert Selection ############################## */
 /**

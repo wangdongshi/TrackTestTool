@@ -26,12 +26,13 @@
 #include "../Drivers/CMSIS/DSP_Lib/Source/FilteringFunctions/arm_biquad_cascade_df1_f32.c"
 
 /* Private Macro definition */
-//#define ADC_FILTER_MAX_DEPTH             64
-//#define ADC_VOLTAGE_NOISE_NUMBER         10                  // 10 max. points and 10 min. points each
+#define DENOISE_BUF_DEPTH                  10
+#define ADC_VOLTAGE_UPPER_LIMIT            4.9f
+#define ADC_VOLTAGE_LOWER_LIMIT            0.1f
+
 #define STAGE_NUMBER                       2                   // The number of 2nd order biquad filters
 #define DIP_VOL_DATA_BUFFER_LENGTH         9                   // internal time = 50 ms
 #define ADC_VOLTAGE_TRANSFER_FACTOR        (5.0f / 131072.0f)  // 131072 = 2^17
-//#define IIR_SCALE_VALUE                  (0.0000392889647183107440f * 0.0000390248389489221170f)   // cutoff = 2Hz
 #define IIR_SCALE_VALUE                    (0.0000098458979119984636f * 0.0000098126110186609252f) // cutoff = 1Hz
 
 #define ULTRA_HIGH_BUFFER_LENGTH           40
@@ -39,18 +40,20 @@
 #define ULTRA_HIGH_SURGE_LIMIT             50.0f  // TODO : must test in actual track
 #define ULTRA_HIGH_SURGE_REPLACE_LENGTH    350    // TODO : must test in actual track
 
+// cutoff = 1Hz
+const float iirCoeffs32LP[5 * STAGE_NUMBER] = {                                                                                 
+	1.0f,  2.0f,  1.0f,  1.9951632412838627f,  -0.99520262487551059f,
+	1.0f,  2.0f,  1.0f,  1.9884180173746586f,  -0.98845726781873322f                                                                                                
+};
+
 /*
+#define IIR_SCALE_VALUE                  (0.0000392889647183107440f * 0.0000390248389489221170f)   // cutoff = 2Hz
 // cutoff = 2Hz
 const float iirCoeffs32LP[5 * STAGE_NUMBER] = {                                                                                 
 	1.0f,  2.0f,  1.0f,  1.9902712416617285f,  -0.99042839752060186f,
 	1.0f,  2.0f,  1.0f,  1.9768913542871200f,  -0.97704745364291579f                                                                                                
 };
 */
-// cutoff = 1Hz
-const float iirCoeffs32LP[5 * STAGE_NUMBER] = {                                                                                 
-	1.0f,  2.0f,  1.0f,  1.9951632412838627f,  -0.99520262487551059f,
-	1.0f,  2.0f,  1.0f,  1.9884180173746586f,  -0.98845726781873322f                                                                                                
-};
 
 /* External Variables */
 extern osMutexId ADCSamplingMutexHandle;
@@ -65,7 +68,6 @@ extern DATA_MODE dataMode;
 uint32_t rollADC = 0;
 uint16_t filterDeepth = 2;
 uint16_t measBackupFlg = 0;
-//static uint16_t noisePtsNumber = 0;
 float vol[AD7608_CH_NUMBER] = {0.0f};
 float volDelayBuf[AD7608_CH_NUMBER] = {0.0f};
 float outputADVal[AD7608_CH_NUMBER] = {0.0f}; // channel data for print to VOFA+
@@ -87,8 +89,6 @@ static void  backupUltraHigh(void);
 static void  replaceUltraHigh(void);
 static void  backupMeasData(void);
 static float filterRollVol(float);
-//static void  movingAverageFilter(const float* xn, float* yn);
-//static float getNoiseSum(const uint32_t deepth, const uint32_t noisePtsNum, const float* pArray);
 
 /* Formal function definitions */
 void pretreatADCData(void)
@@ -138,9 +138,7 @@ static void treatVolData(void)
 {
   // ADC data(18 bit) --> voltage (-5V to +5V)
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
-    //vol[i] = (float)((filteredADC[i] << 14) >> 14) * ADC_VOLTAGE_TRANSFER_FACTOR;
-    vol[i] = (float)((int32_t)(adc[i] ^ 0x00020000) - (int32_t)0x00020000) * 
-             ADC_VOLTAGE_TRANSFER_FACTOR;
+    vol[i] = (float)((int32_t)(adc[i] ^ 0x00020000) - (int32_t)0x00020000) * ADC_VOLTAGE_TRANSFER_FACTOR;
   }
   
   // backup roll ADC data
@@ -148,16 +146,6 @@ static void treatVolData(void)
   
   // remove noise point
   if (workMode == MODE_NORMAL_WORK) removeNoise();
-  
-  // filter process
-  //if (filterDeepth != 0) { // execute moving average filter
-    // TODO : If other types of filters are used, past ADC sample values 
-    //        need to be calculated together, and a certain length of 
-    //        old sample values need to be cached. 
-    //        Because a simple algorithm of moving average is used here, 
-    //        past sample values are not cached for the time being.
-  //  movingAverageFilter(vol, filteredVol);
-  //}
   
   // filter process
   memcpy((void*)filteredVol, (void*)vol, sizeof(vol));
@@ -180,19 +168,13 @@ static void treatVolData(void)
   if (filterDeepth != 0) memcpy((void*)vol, (void*)filteredVol, sizeof(filteredVol));
 }
 
-#define DENOISE_BUF_DEPTH        10
-#define ADC_VOLTAGE_UPPER_LIMIT  4.9f
-#define ADC_VOLTAGE_LOWER_LIMIT  0.1f
 static float denoiseBuf[AD7608_CH_NUMBER][DENOISE_BUF_DEPTH]; // denoise data buffer
 static void removeNoise(void)
 {
   for (uint32_t i = 0; i < AD7608_CH_NUMBER; i++) {
-    // remove noise data
-    if (i != TRACK_DIP_0) {
-      if (vol[i] < ADC_VOLTAGE_LOWER_LIMIT || vol[i] > ADC_VOLTAGE_UPPER_LIMIT) {
-        vol[i] = denoiseBuf[i][DENOISE_BUF_DEPTH - 1];
-      }
-    }
+		if (vol[i] < ADC_VOLTAGE_LOWER_LIMIT || vol[i] > ADC_VOLTAGE_UPPER_LIMIT) {
+			vol[i] = denoiseBuf[i][DENOISE_BUF_DEPTH - 1];
+		}
     // shift old denoise buffer data
     for (uint32_t j = 1; j < DENOISE_BUF_DEPTH - 1; j++) denoiseBuf[i][j] = denoiseBuf[i][j - 1];
     // add current sampling voltage data
@@ -256,7 +238,6 @@ void initFilter(void)
   
   // initialize biquad state
 	arm_biquad_cascade_df1_init_f32(&S, STAGE_NUMBER, (float*)&iirCoeffs32LP[0], (float*)&iirStateF32[0]);
-	
 }
 
 static float filterRollVol(float inVol)
@@ -275,103 +256,3 @@ static float filterRollVol(float inVol)
   
   return iirOutputBuf[0] * IIR_SCALE_VALUE;
 }
-
-/*
-// an implementation of a moving average filter with noise removal
-static int32_t filterIndex = -1;
-static float filterSum[AD7608_CH_NUMBER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-static float filterBuffer[AD7608_CH_NUMBER][ADC_FILTER_MAX_DEPTH]; // ADC filter data buffer
-static float sortArray[ADC_FILTER_MAX_DEPTH];
-
-void initFilter(void)
-{
-  // initialize index 
-  filterIndex = -1;
-  
-  // initialize noise number 
-  switch (filterDeepth) {
-    default:
-    case 0:
-    case 2:
-      noisePtsNumber = 0;
-      break;
-    case 4:
-      noisePtsNumber = 1;
-      break;
-    case 8:
-      noisePtsNumber = 2;
-      break;
-    case 16:
-      noisePtsNumber = 3;
-      break;
-    case 32:
-      noisePtsNumber = 5;
-      break;
-    case 64:
-      noisePtsNumber = 10;
-      break;
-  }
-}
-
-static void movingAverageFilter(const float* xn, float* yn)
-{
-  float noiseSum;
-  
-  if(filterIndex == -1) { // init moving average filter
-    for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
-      for(uint16_t j = 0; j < filterDeepth; j++) {
-        filterBuffer[i][j] = xn[i];
-      }
-      filterSum[i] = xn[i] * filterDeepth;
-      yn[i] = xn[i];
-    }
-    filterIndex = 0;
-  }
-  else {
-    for(uint16_t i = 0; i < AD7608_CH_NUMBER; i++) {
-      filterSum[i] -= filterBuffer[i][filterIndex];
-      filterBuffer[i][filterIndex] = xn[i];
-      filterSum[i] += xn[i];
-      noiseSum = getNoiseSum(filterDeepth, noisePtsNumber, filterBuffer[i]);
-      yn[i] = (filterSum[i] - noiseSum) / (filterDeepth - noisePtsNumber * 2);
-    }
-    filterIndex++;
-    if (filterIndex >= filterDeepth) filterIndex = 0;
-  }
-}
-
-static float getNoiseSum(const uint32_t deepth, const uint32_t noiseNum, const float* pArray)
-{
-  assert_param(deepth <= 64);
-  assert_param(noiseNum <= 10);
-  
-  float temp = 0.0f;
-  float noiseSum = 0.0f;
-  uint32_t exchanged = 1;
-  
-  memcpy((void*)sortArray, (void*)pArray, deepth * sizeof(float));
-  
-  // bubble sort
-  for(uint32_t i = 0; (i < deepth - 1) && exchanged; i++) {
-    exchanged = 0;
-    for(uint32_t j = 0; j < deepth - 1 - i; j++) {
-      if (sortArray[j] > sortArray[j + 1]) {
-        temp = sortArray[j];
-        sortArray[j] = sortArray[j + 1];
-        sortArray[j + 1] = temp;
-        exchanged = 1;
-      }
-    }
-  }
-  
-  // calculate noise points sum
-  for(uint32_t i = 0; i < noiseNum; i++) {
-    noiseSum += sortArray[i];
-  }
-  for(uint32_t i = deepth - noiseNum; i < deepth; i++) {
-    noiseSum += sortArray[i];
-  }
-  
-  return noiseSum;
-}
-*/

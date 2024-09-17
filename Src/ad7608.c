@@ -25,7 +25,7 @@
  * SCLK : PA05
  * RST  : PA07
  * CS   : PA04
- * BUSY : PC05
+ * BUSY : PC04
  * DOA  : PA06
  */
 
@@ -34,7 +34,7 @@
 #define AD7608_CONVSTA_L LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_0)
 #define AD7608_RESET_H     LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_7)
 #define AD7608_RESET_L   LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7)
-#define AD7608_BUSY       LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_5)
+#define AD7608_BUSY       LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_4)
 
 #define INERTIAL_SENSOR_ZERO_OUTPUT      2.50f              // 2.47 to 2.53
 #define CIRCULAR_ANGLE_DEGREE            360.0f             // Unit : degree
@@ -135,21 +135,20 @@ void prepareSensorData(void)
     meas.distance_comp= volDelayBuf[TRACK_DIST_COMP];
     meas.height_comp  = volDelayBuf[TRACK_HEIGHT_COMP];
     meas.distance     = volDelayBuf[TRACK_DISTANCE];
-    meas.battery      = volDelayBuf[TRACK_BATTERY_VOLTAGE] * 2.0f;
+    meas.battery      = 0.0f;
   }
   else {
     meas.distance_comp= vol[TRACK_DIST_COMP];
     meas.height_comp  = vol[TRACK_HEIGHT_COMP];
     meas.distance     = vol[TRACK_DISTANCE];
-    meas.battery      = vol[TRACK_BATTERY_VOLTAGE] * 2.0f;
+    meas.battery      = 0.0f;
   }
   meas.rollADC      = rollADC;
   
   // calculate dip angle and track height
   if (ultraHighReplaceCnt > 0) vol[TRACK_DIP_A1] = ultraHighReplaceVal;
   // Angle = arcsin((E0-Eb)/SF)-Theta
-  sinRoll = (vol[TRACK_DIP_A1] - vol[TRACK_DIP_0] - 
-             INERTIAL_SENSOR_ZERO_OUTPUT) / TILT_SCALE_FACTOR;
+  sinRoll = (vol[TRACK_DIP_A1] - INERTIAL_SENSOR_ZERO_OUTPUT) / TILT_SCALE_FACTOR;
   osMutexRelease(ADCSamplingMutexHandle);
   if (sinRoll > +1.0f) sinRoll = +1.0f;
   if (sinRoll < -1.0f) sinRoll = -1.0f;

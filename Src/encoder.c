@@ -18,12 +18,12 @@
 #include "calibrator.h"
 
 /* Private macro -------------------------------------------------------------*/
-#define DIRECTION_ENCODER_INSTALL (1) // 1 or -1
-#define SPEED_FACTOR              3.6f    // mm/ms --> km/h
-#define TESTER_TRIGGER_DISTANCE   125.0f  // Unit : mm
-#define ENCODER_PULSE_RATE        200     // Unit : pulse/r (Omron E6B2)
-#define ENCODER_MULTI_FREQ        4       // A & B signal, rising & falling edge
-#define PI                        3.1415926f
+#define DIRECTION_ENCODER_INSTALL     (1)         // 1 or -1
+#define SPEED_FACTOR                  3.6f        // mm/ms --> km/h
+#define TESTER_TRIGGER_DISTANCE       125.0f      // Unit : mm
+#define ENCODER_PULSE_RATE            200         // Unit : pulse/r (Omron E6B2)
+#define ENCODER_MULTI_FREQ            4           // A & B signal, rising & falling edge
+#define PI                            3.1415926f
 
 /* Private type definitions --------------------------------------------------*/
 typedef enum {

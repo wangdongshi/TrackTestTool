@@ -38,6 +38,10 @@ static float calculateCelsius(uint16_t pulseCnt);
 /* Formal function definitions -----------------------------------------------*/
 void startTempSensor(void)
 {
+  LL_GPIO_SetOutputPin(EN_NST1_GPIO_Port, EN_NST1_Pin);
+  LL_GPIO_ResetOutputPin(EN_NST2_GPIO_Port, EN_NST2_Pin);
+  LL_GPIO_SetOutputPin(EN_NST3_GPIO_Port, EN_NST3_Pin);
+	
   HAL_TIM_Base_Start(&htim4);
 }
 

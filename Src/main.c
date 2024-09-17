@@ -73,6 +73,8 @@ TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim7;
 
+UART_HandleTypeDef huart4;
+UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
@@ -117,7 +119,6 @@ static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_USART3_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM4_Init(void);
@@ -125,6 +126,9 @@ static void MX_TIM5_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM7_Init(void);
+static void MX_UART4_Init(void);
+static void MX_UART5_Init(void);
+static void MX_USART3_UART_Init(void);
 void mainTask(void const * argument);
 void adcTask(void const * argument);
 void sensorTask(void const * argument);
@@ -179,7 +183,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   MX_TIM1_Init();
   MX_TIM4_Init();
@@ -187,6 +190,9 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM7_Init();
+  MX_UART4_Init();
+  MX_UART5_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   
   /* USER CODE END 2 */
@@ -584,6 +590,44 @@ static void MX_TIM7_Init(void)
 
 }
 
+/* UART4 init function */
+static void MX_UART4_Init(void)
+{
+
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 38400;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* UART5 init function */
+static void MX_UART5_Init(void)
+{
+
+  huart5.Instance = UART5;
+  huart5.Init.BaudRate = 38400;
+  huart5.Init.WordLength = UART_WORDLENGTH_8B;
+  huart5.Init.StopBits = UART_STOPBITS_1;
+  huart5.Init.Parity = UART_PARITY_NONE;
+  huart5.Init.Mode = UART_MODE_TX_RX;
+  huart5.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart5.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart5) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /* USART1 init function */
 static void MX_USART1_UART_Init(void)
 {
@@ -688,8 +732,12 @@ static void MX_DMA_Init(void)
 
 }
 
-/** Configure pins
-     PE5   ------> S_TIM9_CH1
+/** Configure pins as 
+        * Analog 
+        * Input 
+        * Output
+        * EVENT_OUT
+        * EXTI
 */
 static void MX_GPIO_Init(void)
 {
@@ -698,34 +746,35 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOE);
-  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOH);
+  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
 
   /**/
-  LL_GPIO_ResetOutputPin(GPIOC, LED1_Pin|TEST_Pin);
+  LL_GPIO_ResetOutputPin(GPIOE, LED_WORKING_Pin|EN_NST1_Pin|EN_NST2_Pin|EN_NST3_Pin);
+
+  /**/
+  LL_GPIO_ResetOutputPin(GPIOC, TEST_Pin|BEEP_Pin);
 
   /**/
   LL_GPIO_ResetOutputPin(GPIOA, RS485_REDE_Pin|ADC_RESET_Pin);
 
   /**/
-  GPIO_InitStruct.Pin = NST3_Pin;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-  GPIO_InitStruct.Alternate = LL_GPIO_AF_3;
-  LL_GPIO_Init(NST3_GPIO_Port, &GPIO_InitStruct);
+  LL_GPIO_ResetOutputPin(GPIOD, SW1_Pin|SW2_Pin|SW3_Pin|SW4_Pin 
+                          |LED1_Pin|LED2_Pin|LED3_Pin);
 
   /**/
-  GPIO_InitStruct.Pin = LED1_Pin;
+  LL_GPIO_ResetOutputPin(LED4_GPIO_Port, LED4_Pin);
+
+  /**/
+  GPIO_InitStruct.Pin = LED_WORKING_Pin|EN_NST1_Pin|EN_NST2_Pin|EN_NST3_Pin;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
   GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-  LL_GPIO_Init(LED1_GPIO_Port, &GPIO_InitStruct);
+  LL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /**/
   GPIO_InitStruct.Pin = TEST_Pin;
@@ -750,6 +799,14 @@ static void MX_GPIO_Init(void)
   LL_GPIO_Init(ADC_BUSY_GPIO_Port, &GPIO_InitStruct);
 
   /**/
+  GPIO_InitStruct.Pin = BEEP_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  LL_GPIO_Init(BEEP_GPIO_Port, &GPIO_InitStruct);
+
+  /**/
   GPIO_InitStruct.Pin = IN_DI_A_Pin;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
@@ -760,6 +817,29 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
   LL_GPIO_Init(IN_DI_B_GPIO_Port, &GPIO_InitStruct);
+
+  /**/
+  GPIO_InitStruct.Pin = ETH_CFG_Pin|ETH_RST_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  LL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /**/
+  GPIO_InitStruct.Pin = SW1_Pin|SW2_Pin|SW3_Pin|SW4_Pin 
+                          |LED1_Pin|LED2_Pin|LED3_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  LL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /**/
+  GPIO_InitStruct.Pin = LED4_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  LL_GPIO_Init(LED4_GPIO_Port, &GPIO_InitStruct);
 
 }
 

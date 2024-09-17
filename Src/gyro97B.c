@@ -75,7 +75,6 @@ void uart3RxCallback(void)
     
   // Get raw data
   gyro_24bit = (((int32_t)gyro1[2]) << 16) + (((int32_t)gyro1[3]) << 8) + (int32_t)gyro1[1];
-  //gyro_24bit = (gyro_24bit << 8) >> 8;
   gyro_24bit = (int32_t)(gyro_24bit ^ 0x00800000) - (int32_t)0x00800000;
   
   // Transfer raw data to angular velocity
@@ -103,7 +102,7 @@ void uart6RxCallback(void)
   int32_t gyro_24bit;
   
   // Check leading byte
-  if (gyro1[0] != GYRO_FIRST_BYTE) {
+  if (gyro2[0] != GYRO_FIRST_BYTE) {
     // Integrate angular velocity by previous omega data
     PRINTF("Gyroscope2 data format is error!\r\n");
     meas.yaw += meas.omega2 / GYRO_UPDATE_FREQUENCY;
@@ -114,7 +113,6 @@ void uart6RxCallback(void)
   
   // Get raw data
   gyro_24bit = (((int32_t)gyro2[2]) << 16) + (((int32_t)gyro2[3]) << 8) + (int32_t)gyro2[1];
-  //gyro_24bit = (gyro_24bit << 8) >> 8;
   gyro_24bit = (int32_t)(gyro_24bit ^ 0x00800000) - (int32_t)0x00800000;
   
   // Transfer raw data to angular velocity
