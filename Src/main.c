@@ -105,7 +105,7 @@ osSemaphoreId UserCommandProcessSemHandle;
 #define PROJECT_NAME_LINE4         "/_/    /_/   \_,_/ \__/ /_/\_\      \___/  \__/ \___//_/_/_/\__/ \__/ /_/    \_, / \r\n"
 #define PROJECT_NAME_LINE5         "                                                                            /___/  \r\n"
 
-#define FIRMWARE_VERSION           "0.0.1"
+#define FIRMWARE_VERSION           "0.0.2"
 #define COMPILE_DATE_TIME          __DATE__","__TIME__
 #define PROJECT_NAME               PROJECT_NAME_LINE1\
                                    PROJECT_NAME_LINE2\
