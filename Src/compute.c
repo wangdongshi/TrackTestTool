@@ -26,6 +26,8 @@
 #include "../Drivers/CMSIS/DSP_Lib/Source/FilteringFunctions/arm_biquad_cascade_df1_f32.c"
 
 /* Private Macro definition */
+#define USE_LOW_PASS_FILTER                0
+
 #define DENOISE_BUF_DEPTH                  10
 #define ADC_VOLTAGE_UPPER_LIMIT            4.9f
 #define ADC_VOLTAGE_LOWER_LIMIT            0.1f
@@ -88,7 +90,7 @@ static void  removeNoise(void);
 static void  backupUltraHigh(void);
 static void  replaceUltraHigh(void);
 static void  backupMeasData(void);
-static float filterRollVol(float);
+float filterRollVol(float);
 
 /* Formal function definitions */
 void pretreatADCData(void)
@@ -149,9 +151,11 @@ static void treatVolData(void)
   
   // filter process
   memcpy((void*)filteredVol, (void*)vol, sizeof(vol));
+#if USE_LOW_PASS_FILTER
   if (filterDeepth != 0) {
     filteredVol[TRACK_DIP_A1] = filterRollVol(vol[TRACK_DIP_A1]);
   }
+#endif
   
   // copy data to print buffer
   if (dataMode == DATA_ADC_RAW) {
@@ -240,7 +244,7 @@ void initFilter(void)
 	arm_biquad_cascade_df1_init_f32(&S, STAGE_NUMBER, (float*)&iirCoeffs32LP[0], (float*)&iirStateF32[0]);
 }
 
-static float filterRollVol(float inVol)
+float filterRollVol(float inVol)
 {
 	float *inputF32  = &iirInputBuf[0];
   float *outputF32 = &iirOutputBuf[0];
