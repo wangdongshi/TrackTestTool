@@ -79,6 +79,8 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
+DMA_HandleTypeDef hdma_uart4_rx;
+DMA_HandleTypeDef hdma_uart5_rx;
 DMA_HandleTypeDef hdma_usart2_tx;
 DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart3_rx;
@@ -105,7 +107,7 @@ osSemaphoreId UserCommandProcessSemHandle;
 #define PROJECT_NAME_LINE4         "/_/    /_/   \_,_/ \__/ /_/\_\      \___/  \__/ \___//_/_/_/\__/ \__/ /_/    \_, / \r\n"
 #define PROJECT_NAME_LINE5         "                                                                            /___/  \r\n"
 
-#define FIRMWARE_VERSION           "0.0.3"
+#define FIRMWARE_VERSION           "0.0.4"
 #define COMPILE_DATE_TIME          __DATE__","__TIME__
 #define PROJECT_NAME               PROJECT_NAME_LINE1\
                                    PROJECT_NAME_LINE2\
@@ -735,9 +737,15 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
   /* DMA1_Stream1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+  /* DMA1_Stream2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
   /* DMA1_Stream5_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
@@ -949,12 +957,12 @@ static void sendData2PC(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   assert_param(huart != &huart2);
-  
-  if (huart == &huart3) {
-    uart3RxCallback();
+	
+  if (huart == &huart4) {
+    uart4RxCallback();
   }
-  else if (huart == &huart6) {
-    uart6RxCallback();
+  else if (huart == &huart5) {
+    uart5RxCallback();
   }
 }
 
@@ -967,7 +975,7 @@ void mainTask(void const * argument)
   /* USER CODE BEGIN 5 */
   
   assert_param(1 == 1); // for test assert
-	printf(BANNER_INFO);
+  printf(BANNER_INFO);
   
   initData();
   startGyro();
@@ -1108,7 +1116,7 @@ void assert_failed(uint8_t* file, uint32_t line)
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   taskDISABLE_INTERRUPTS();
   printf("Wrong parameters value : file %s on line %d.\r\n", file, (int)line);
-	while(1);
+  while(1);
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

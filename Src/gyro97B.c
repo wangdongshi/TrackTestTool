@@ -28,9 +28,8 @@ typedef enum {
 } Status;
 
 /* External Variables --------------------------------------------------------*/
-//extern UART_HandleTypeDef huart2;
-extern UART_HandleTypeDef huart3;
-extern UART_HandleTypeDef huart6;
+extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart5;
 extern TRACK_MEAS_ITEM meas;
 extern GYRO_MODE gyroMode;
 
@@ -51,22 +50,22 @@ void startGyro(void)
   meas.omega1 = 0.0f - gyro_zero_offset[0];
   meas.omega2 = 0.0f - gyro_zero_offset[1];
   
-  status = HAL_UART_Receive_DMA(&huart3, (uint8_t*)gyro1, GYRO_RX_BUFFER_SIZE);
+  status = HAL_UART_Receive_DMA(&huart4, (uint8_t*)gyro1, GYRO_RX_BUFFER_SIZE);
   assert_param(status == HAL_OK);
-
-  status = HAL_UART_Receive_DMA(&huart6, (uint8_t*)gyro2, GYRO_RX_BUFFER_SIZE);
+  
+  status = HAL_UART_Receive_DMA(&huart5, (uint8_t*)gyro2, GYRO_RX_BUFFER_SIZE);
   assert_param(status == HAL_OK);
 }
 
 // pitch
-void uart3RxCallback(void)
+void uart4RxCallback(void)
 {
   int32_t gyro_24bit;
   
   // Check leading byte
   if (gyro1[0] != GYRO_FIRST_BYTE) {
     // Integrate angular velocity by previous omega data
-    PRINTF("Gyroscope1 data format is error!\r\n");
+    PRINTF("Gyroscope3 data format is error!\r\n");
     meas.pitch += meas.omega1 / GYRO_UPDATE_FREQUENCY;
     if (meas.pitch > CIRCULAR_ANGLE_DEGREE) meas.pitch -= CIRCULAR_ANGLE_DEGREE;
     gyro_count[0]++;
@@ -97,14 +96,14 @@ void uart3RxCallback(void)
 }
 
 // yaw
-void uart6RxCallback(void)
+void uart5RxCallback(void)
 {
   int32_t gyro_24bit;
   
   // Check leading byte
   if (gyro2[0] != GYRO_FIRST_BYTE) {
     // Integrate angular velocity by previous omega data
-    PRINTF("Gyroscope2 data format is error!\r\n");
+    PRINTF("Gyroscope4 data format is error!\r\n");
     meas.yaw += meas.omega2 / GYRO_UPDATE_FREQUENCY;
     if (meas.yaw > CIRCULAR_ANGLE_DEGREE) meas.yaw -= CIRCULAR_ANGLE_DEGREE;
     gyro_count[1]++;

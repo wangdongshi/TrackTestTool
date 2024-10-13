@@ -147,7 +147,7 @@
         <tRSysVw>1</tRSysVw>
         <sRunDeb>0</sRunDeb>
         <sLrtime>0</sLrtime>
-        <nTsel>11</nTsel>
+        <nTsel>12</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
         <sDlgDll></sDlgDll>
@@ -158,7 +158,7 @@
         <tDlgDll></tDlgDll>
         <tDlgPa></tDlgPa>
         <tIfile></tIfile>
-        <pMon>STLink\ST-LINKIII-KEIL_SWO.dll</pMon>
+        <pMon>BIN\CMSIS_AGDI.dll</pMon>
       </DebugOpt>
       <TargetDriverDllRegistry>
         <SetRegEntry>
@@ -201,9 +201,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>69</LineNumber>
+          <LineNumber>73</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134252354</Address>
+          <Address>134252034</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -212,14 +212,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>D:\MyStudio\杞ㄦ浠?Project\TrackTestTool\Src\gyro97B.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\TrackTestTool\../Src/gyro97B.c\69</Expression>
+          <Expression>\\TrackTestTool\../Src/gyro97B.c\73</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>77</LineNumber>
+          <LineNumber>81</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134252374</Address>
+          <Address>134252054</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -228,14 +228,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>D:\MyStudio\杞ㄦ浠?Project\TrackTestTool\Src\gyro97B.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\TrackTestTool\../Src/gyro97B.c\77</Expression>
+          <Expression>\\TrackTestTool\../Src/gyro97B.c\81</Expression>
         </Bp>
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>108</LineNumber>
+          <LineNumber>112</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134252636</Address>
+          <Address>134252330</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -244,14 +244,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>D:\MyStudio\杞ㄦ浠?Project\TrackTestTool\Src\gyro97B.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\TrackTestTool\../Src/gyro97B.c\108</Expression>
+          <Expression>\\TrackTestTool\../Src/gyro97B.c\112</Expression>
         </Bp>
         <Bp>
           <Number>3</Number>
           <Type>0</Type>
-          <LineNumber>116</LineNumber>
+          <LineNumber>120</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134252684</Address>
+          <Address>134252350</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -260,14 +260,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>D:\MyStudio\杞ㄦ浠?Project\TrackTestTool\Src\gyro97B.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\TrackTestTool\../Src/gyro97B.c\116</Expression>
+          <Expression>\\TrackTestTool\../Src/gyro97B.c\120</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>gyro1</ItemText>
+          <ItemText>gyro2</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
