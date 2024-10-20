@@ -43,8 +43,6 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim7;
 extern osSemaphoreId EncoderArriveSemHandle;
-extern osMutexId EncoderDelayMutexHandle;
-//extern osTimerId EncoderDelayTimerHandle;
 extern TRACK_MEAS_ITEM meas;
 extern uint16_t measBackupFlg;
 extern DIRECTION_MODE directionMode;
@@ -124,10 +122,9 @@ void encoderCallback(void)
   if (currentDirection == previousDirection) {
     if (currentDirection == FORWARD) meas.mileage += (TESTER_TRIGGER_DISTANCE / 1000.f) * (float)direction;
     else meas.mileage -= (TESTER_TRIGGER_DISTANCE / 1000.f) * (float)direction;
-    //osMutexWait(EncoderDelayMutexHandle, osWaitForever);  // TODO : Adding Mutex here will cause a crash
-    measBackupFlg = 1;
-    //osMutexRelease(EncoderDelayMutexHandle);
-    HAL_TIM_Base_Start_IT(&htim7); // start encoder delay timer
+    //measBackupFlg = 1;
+    //HAL_TIM_Base_Start_IT(&htim7); // start encoder delay timer
+    osMutexRelease(EncoderArriveSemHandle);
   }
   else {
     meas.speed = 0.0f; // The rotation is reversed and the speed returns to zero.

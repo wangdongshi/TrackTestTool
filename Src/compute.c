@@ -59,7 +59,6 @@ const float iirCoeffs32LP[5 * STAGE_NUMBER] = {
 
 /* External Variables */
 extern osMutexId ADCSamplingMutexHandle;
-extern osMutexId EncoderDelayMutexHandle;
 extern uint8_t buff[2][AD7608_DMA_BUFFER_LENGTH];
 extern uint8_t buffIndex;
 extern float filteredVol[AD7608_CH_NUMBER]; // Can not define here!!
@@ -215,14 +214,10 @@ static void  replaceUltraHigh(void)
   
 static void backupMeasData(void)
 {
-  osMutexWait(EncoderDelayMutexHandle, osWaitForever);
-  
   if (measBackupFlg != 0) {
     memcpy(&volDelayBuf[0], &vol[0], AD7608_CH_NUMBER * sizeof(float));
     measBackupFlg = 0;
   }
-  
-  osMutexRelease(EncoderDelayMutexHandle);
 }
 
 void initFilter(void)

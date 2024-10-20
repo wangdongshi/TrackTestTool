@@ -131,18 +131,18 @@ void prepareSensorData(void)
   
   // set normal valtage item
   osMutexWait(ADCSamplingMutexHandle, osWaitForever);
-  if (trigMode == TRIG_ENCODER) {
-    meas.distance_comp= volDelayBuf[TRACK_DIST_COMP];
-    meas.height_comp  = volDelayBuf[TRACK_HEIGHT_COMP];
-    meas.distance     = volDelayBuf[TRACK_DISTANCE];
-    meas.battery      = 0.0f;
-  }
-  else {
+  //if (trigMode == TRIG_ENCODER) {
+  //  meas.distance_comp= volDelayBuf[TRACK_DIST_COMP];
+  //  meas.height_comp  = volDelayBuf[TRACK_HEIGHT_COMP];
+  //  meas.distance     = volDelayBuf[TRACK_DISTANCE];
+  //  meas.battery      = 0.0f;
+  //}
+  //else {
     meas.distance_comp= vol[TRACK_DIST_COMP];
     meas.height_comp  = vol[TRACK_HEIGHT_COMP];
     meas.distance     = vol[TRACK_DISTANCE];
     meas.battery      = 0.0f;
-  }
+  //}
   meas.rollADC      = rollADC;
   
   // calculate dip angle and track height

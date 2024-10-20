@@ -93,7 +93,6 @@ osThreadId COMM_TASKHandle;
 osThreadId MONITOR_TASKHandle;
 osMutexId ADCSamplingMutexHandle;
 osMutexId UserCommandMutexHandle;
-osMutexId EncoderDelayMutexHandle;
 osSemaphoreId AdcConvertStartSemHandle;
 osSemaphoreId EncoderArriveSemHandle;
 osSemaphoreId UserCommandArriveSemHandle;
@@ -228,10 +227,6 @@ int main(void)
   /* definition and creation of UserCommandMutex */
   osMutexDef(UserCommandMutex);
   UserCommandMutexHandle = osMutexCreate(osMutex(UserCommandMutex));
-
-  /* definition and creation of EncoderDelayMutex */
-  osMutexDef(EncoderDelayMutex);
-  EncoderDelayMutexHandle = osMutexCreate(osMutex(EncoderDelayMutex));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
