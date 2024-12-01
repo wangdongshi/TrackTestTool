@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 typedef enum {
-  COMM_CHANGE_TO_NORMAL_MODE = 0, // change mode from pre-work to work
+  COMM_SET_WORK_MODE = 0,
   COMM_SET_MILAGE,
   COMM_SET_DISPLAY_MODE,
   COMM_SET_TRIGGER_MODE,

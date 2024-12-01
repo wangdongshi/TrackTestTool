@@ -79,10 +79,11 @@ void commTask(void const * argument)
     if (*((uint16_t*)rxMsgBuf) == 0) continue; // remove interference message on UART2
     COMM_TYPE type = (COMM_TYPE)swapUint16(*(uint16_t*)(&rxMsgBuf[2]));
     switch (type) {
-      case COMM_CHANGE_TO_NORMAL_MODE:
-        workMode = MODE_NORMAL_WORK;
+      case COMM_SET_WORK_MODE:
+        workMode = (WORK_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[8]));
         meas.mileage = swapFloat(*(float*)(&rxMsgBuf[4]));
         initFilter();
+        if (workMode == MODE_PRE_WORK) osSemaphoreRelease(EncoderArriveSemHandle);
         break;
       case COMM_SET_MILAGE:
         stopEncoder();
