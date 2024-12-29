@@ -60,6 +60,7 @@
 #include "gyro97B.h"
 #include "encoder.h"
 #include "nst1001.h"
+#include "flash.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -971,6 +972,20 @@ void mainTask(void const * argument)
   
   assert_param(1 == 1); // for test assert
   printf(BANNER_INFO);
+  
+  // for test FLASH reading & writing
+  // -----------------------------------------------------------------------
+  char testData[] = "Test flash access.\r\n";
+  if (Check1KBytesWithCRC16(11, sizeof(testData))) {
+    Write1KBytesWithCRC16(11, (unsigned char*)testData, sizeof(testData));
+    char resultData[50];
+    unsigned int address = 0x08020000 + (10 - 5) * 128 * 1024;
+    for (int i = 0; i < sizeof(testData); i++) {
+      resultData[i] = *(__IO unsigned int*)(address + i);
+    }
+    printf("%s", resultData);
+  }
+  // -----------------------------------------------------------------------
   
   initData();
   startGyro();
