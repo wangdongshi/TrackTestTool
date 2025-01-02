@@ -30,6 +30,7 @@ typedef enum {
 
 void ADC_Task(void const * argument);
 void startADC(void);
+void initCalibration(void);
 void initFilter(void);
 void prepareSensorData(void);
 

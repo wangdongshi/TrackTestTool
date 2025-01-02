@@ -91,9 +91,9 @@ int WriteSectorData(const unsigned short sectorNo,
   return 1;
 }
 
-int Write1KBytesWithCRC16(const unsigned short sectorNo, 
-                          unsigned char* data, 
-                          const unsigned short size)
+int WriteSectorWithCRC16(const unsigned short sectorNo, 
+                        unsigned char* data, 
+                        const unsigned short size)
 {
   assert_param(sectorNo > 5 && sectorNo < 12);
   
@@ -130,7 +130,7 @@ int Write1KBytesWithCRC16(const unsigned short sectorNo,
   return 1;
 }
 
-int Check1KBytesWithCRC16(const unsigned short sectorNo, const unsigned short size)
+int CheckSectorWithCRC16(const unsigned short sectorNo, const unsigned short size)
 {
   assert_param(sectorNo > 5 && sectorNo < 12);
   

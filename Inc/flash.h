@@ -13,7 +13,7 @@
 
 int EraseSector(const unsigned short sectorNo);
 int WriteSectorData(const unsigned short sectorNo, unsigned char* data, const unsigned short size);
-int Write1KBytesWithCRC16(const unsigned short sectorNo, unsigned char* data, const unsigned short size);
-int Check1KBytesWithCRC16(const unsigned short sectorNo, const unsigned short size);
+int WriteSectorWithCRC16(const unsigned short sectorNo, unsigned char* data, const unsigned short size);
+int CheckSectorWithCRC16(const unsigned short sectorNo, const unsigned short size);
 
 #endif // __FLASH_H__
