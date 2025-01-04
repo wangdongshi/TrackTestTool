@@ -58,8 +58,7 @@ extern TRIG_MODE trigMode;
 extern uint32_t rollADC;
 
 /* Private Variables ---------------------------------------------------------*/
-//const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
-extern CAL_TBL tbl;
+extern CAL_TBL calTbl;
 uint8_t buff[2][AD7608_DMA_BUFFER_LENGTH] __attribute__((aligned(4))) = {0};
 uint8_t buffIndex = 0;
 float filteredVol[AD7608_CH_NUMBER] = {0.0f}; // filtered ADC data (length = 18 bit) (Must define here!!)
@@ -175,18 +174,18 @@ static float calibrateADCData(ADC_CAL item, float raw)
   float alpha, result;
   
   for (index = 0; index < CAL_POINTS; index++) {
-    if (isnan(tbl[item][index].meas)) return tbl[item][index - 1].real; // overflow
-    if (tbl[item][index].meas == raw) return tbl[item][index].real;
-    if (tbl[item][index].meas > raw) break;
+    if (isnan(calTbl[item][index].meas)) return calTbl[item][index - 1].real; // overflow
+    if (calTbl[item][index].meas == raw) return calTbl[item][index].real;
+    if (calTbl[item][index].meas > raw) break;
   }
   
-  if (index == 0) return tbl[item][0].real; // underflow
-  if (index == CAL_POINTS) return tbl[item][index - 1].real; // overflow
+  if (index == 0) return calTbl[item][0].real; // underflow
+  if (index == CAL_POINTS) return calTbl[item][index - 1].real; // overflow
   
-  alpha = (tbl[item][index].meas - raw) /
-          (tbl[item][index].meas - tbl[item][index - 1].meas);
-  result = tbl[item][index].real - alpha * 
-          (tbl[item][index].real - tbl[item][index - 1].real);
+  alpha = (calTbl[item][index].meas - raw) /
+          (calTbl[item][index].meas - calTbl[item][index - 1].meas);
+  result = calTbl[item][index].real - alpha * 
+          (calTbl[item][index].real - calTbl[item][index - 1].real);
   
   return result;
 }

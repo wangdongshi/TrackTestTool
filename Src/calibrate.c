@@ -21,23 +21,33 @@
 /* External Variables --------------------------------------------------------*/
 
 /* Private Variables ---------------------------------------------------------*/
-CAL_TBL tbl = CAL_TBL_DATA;
+const CAL_TBL initCalTbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
+CAL_TBL calTbl;
 
 /* Private function prototypes -----------------------------------------------*/
 
 /* Formal function definitions -----------------------------------------------*/
 int initCalibrateData(void)
 {
-  if (checkSectorWithCRC16(CAL_DATA_SECTOR, sizeof(CAL_TBL))) {
-    memcpy(&tbl, (void*)CAL_DATA_ADDRESS, sizeof(CAL_TBL));
-    return 1;
+  int result = checkSectorWithCRC16(CAL_DATA_SECTOR, sizeof(CAL_TBL));
+  
+  if (result) {
+    memcpy((void*)&calTbl, (void*)CAL_DATA_ADDRESS, sizeof(CAL_TBL));
   }
   else {
-    return 0;
+    memcpy((void*)&calTbl, (void*)&initCalTbl, sizeof(CAL_TBL));
   }
+  
+  return result;
 }
 
 int writeCalibrateData(void)
 {
-  return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&tbl, sizeof(CAL_TBL));
+  return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&calTbl, sizeof(CAL_TBL));
+}
+
+int eraseCalibrateData(void)
+{
+  memcpy((void*)&calTbl, (void*)&initCalTbl, sizeof(CAL_TBL));
+  return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&calTbl, sizeof(CAL_TBL));
 }
