@@ -114,6 +114,12 @@ void startADC(void)
   HAL_TIM_Base_Start_IT(&htim3);
 }
 
+void stopADC(void)
+{
+  HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_Base_Stop_IT(&htim3);
+}
+
 static void resetADC(void)
 {
   AD7608_RESET_H;
