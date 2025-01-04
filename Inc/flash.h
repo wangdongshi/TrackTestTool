@@ -19,9 +19,9 @@
 # define BYTE_NUM_PER_SECTOR        (PAGE_NUM_PER_SECTOR * BYTE_NUM_PER_PAGE)
 # define FLASH_MIN_SECTOR_ADDRESS   0x08020000
 
-int EraseSector(const unsigned short sectorNo);
-int WriteSectorData(const unsigned short sectorNo, unsigned char* data, const unsigned short size);
-int WriteSectorWithCRC16(const unsigned short sectorNo, unsigned char* data, const unsigned short size);
-int CheckSectorWithCRC16(const unsigned short sectorNo, const unsigned short size);
+int eraseSector(const unsigned short sectorNo);
+int writeSectorData(const unsigned short sectorNo, unsigned char* data, const unsigned short size);
+int writeSectorWithCRC16(const unsigned short sectorNo, unsigned char* data, const unsigned short size);
+int checkSectorWithCRC16(const unsigned short sectorNo, const unsigned short size);
 
 #endif // __FLASH_H__

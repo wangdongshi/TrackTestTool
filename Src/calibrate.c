@@ -26,9 +26,18 @@ CAL_TBL tbl = CAL_TBL_DATA;
 /* Private function prototypes -----------------------------------------------*/
 
 /* Formal function definitions -----------------------------------------------*/
-void initCalibrateData(void)
+int initCalibrateData(void)
 {
-  if (CheckSectorWithCRC16(CAL_DATA_SECTOR, sizeof(CAL_TBL))) {
+  if (checkSectorWithCRC16(CAL_DATA_SECTOR, sizeof(CAL_TBL))) {
     memcpy(&tbl, (void*)CAL_DATA_ADDRESS, sizeof(CAL_TBL));
+    return 1;
   }
+  else {
+    return 0;
+  }
+}
+
+int writeCalibrateData(void)
+{
+  return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&tbl, sizeof(CAL_TBL));
 }

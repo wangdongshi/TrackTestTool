@@ -24,13 +24,13 @@
 /* External Variables --------------------------------------------------------*/
 
 /* Private Variables ---------------------------------------------------------*/
-const unsigned short Crc16CCITTTab[256];
+const unsigned short crc16CCITTTab[256];
 
 /* Private function prototypes -----------------------------------------------*/
-static unsigned short CRC16(const unsigned char* ptr, unsigned short len);
+static unsigned short crc16(const unsigned char* ptr, unsigned short len);
 
 /* Formal function definitions -----------------------------------------------*/
-int EraseSector(const unsigned short sectorNo)
+int eraseSector(const unsigned short sectorNo)
 {
   assert_param(sectorNo >= FLASH_OPT_MIN_SECTOR && 
                sectorNo <= FLASH_OPT_MAX_SECTOR);
@@ -57,7 +57,7 @@ int EraseSector(const unsigned short sectorNo)
   return 1;
 }
 
-int WriteSectorData(const unsigned short sectorNo, 
+int writeSectorData(const unsigned short sectorNo, 
                      unsigned char* data, 
                      const unsigned short size)
 {
@@ -94,7 +94,7 @@ int WriteSectorData(const unsigned short sectorNo,
   return 1;
 }
 
-int WriteSectorWithCRC16(const unsigned short sectorNo, 
+int writeSectorWithCRC16(const unsigned short sectorNo, 
                         unsigned char* data, 
                         const unsigned short size)
 {
@@ -104,7 +104,7 @@ int WriteSectorWithCRC16(const unsigned short sectorNo,
   unsigned int sectorError = 0;
   unsigned int address = FLASH_MIN_SECTOR_ADDRESS + 
     (sectorNo - FLASH_OPT_MIN_SECTOR) * BYTE_NUM_PER_SECTOR;
-  unsigned short crc = CRC16(data, size);
+  unsigned short crc = crc16(data, size);
 
   // Unlock FLASH
   HAL_FLASH_Unlock();
@@ -135,7 +135,7 @@ int WriteSectorWithCRC16(const unsigned short sectorNo,
   return 1;
 }
 
-int CheckSectorWithCRC16(const unsigned short sectorNo, const unsigned short size)
+int checkSectorWithCRC16(const unsigned short sectorNo, const unsigned short size)
 {
   assert_param(sectorNo >= FLASH_OPT_MIN_SECTOR && 
                sectorNo <= FLASH_OPT_MAX_SECTOR);
@@ -143,14 +143,14 @@ int CheckSectorWithCRC16(const unsigned short sectorNo, const unsigned short siz
   unsigned char* ptr = (unsigned char*)(FLASH_MIN_SECTOR_ADDRESS + 
                        (sectorNo - FLASH_OPT_MIN_SECTOR) * BYTE_NUM_PER_SECTOR);
   
-  unsigned short crcCompute = CRC16(ptr, size);
+  unsigned short crcCompute = crc16(ptr, size);
   unsigned short crcOnFlash = ((unsigned short)*(__IO unsigned char*)((unsigned int)ptr + size)) |
                               ((unsigned short)*(__IO unsigned char*)((unsigned int)ptr + size + 1)) << 8;
   
   return (crcCompute == crcOnFlash);
 }
 
-static unsigned short CRC16(const unsigned char* ptr, unsigned short len)
+static unsigned short crc16(const unsigned char* ptr, unsigned short len)
 {
   unsigned short crc = 0;
   unsigned char  da  = 0;
@@ -158,14 +158,14 @@ static unsigned short CRC16(const unsigned char* ptr, unsigned short len)
   while(len--) { 
     da = (unsigned char)(crc / 256);
     crc <<= 8;
-    crc ^= Crc16CCITTTab[da ^ *ptr];
+    crc ^= crc16CCITTTab[da ^ *ptr];
     ptr++;
   }
   
   return crc;
 }
 
-const unsigned short Crc16CCITTTab[256] = {
+const unsigned short crc16CCITTTab[256] = {
   0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,   
   0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,   
   0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,   

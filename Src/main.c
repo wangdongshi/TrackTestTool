@@ -976,8 +976,8 @@ void mainTask(void const * argument)
   // for test FLASH reading & writing
   // -----------------------------------------------------------------------
   char testData[] = "Test flash access.\r\n";
-  if (CheckSectorWithCRC16(11, sizeof(testData))) {
-    WriteSectorWithCRC16(11, (unsigned char*)testData, sizeof(testData));
+  if (checkSectorWithCRC16(11, sizeof(testData))) {
+    writeSectorWithCRC16(11, (unsigned char*)testData, sizeof(testData));
     char resultData[50];
     unsigned int address = 0x08020000 + (10 - 5) * 128 * 1024;
     for (int i = 0; i < sizeof(testData); i++) {
