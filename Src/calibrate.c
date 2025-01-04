@@ -41,6 +41,16 @@ int initCalibrateData(void)
   return result;
 }
 
+int insertCalibrateRecord(
+  const unsigned short type,
+  const unsigned short seq,
+  const float standVal,
+  const float calibVal
+)
+{
+  return 1;
+}
+
 int writeCalibrateData(void)
 {
   return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&calTbl, sizeof(CAL_TBL));

@@ -17,6 +17,7 @@
 #include "ad7608.h"
 #include "encoder.h"
 #include "comm.h"
+#include "calibrate.h"
 #include "crc.h"
 #include "stm32f4xx_hal_uart.h"
 
@@ -122,6 +123,19 @@ void commTask(void const * argument)
         filterDeepth = (filterDeepth > 32) ? 32 : filterDeepth;
         filterDeepth = ((filterDeepth & (filterDeepth - 1)) == 0) ? filterDeepth : 0; // must be 2 to the Nth power
         initFilter();
+        break;
+      case COMM_SET_CAL_DATA:
+        insertCalibrateRecord(0, 0, 0.0f, 0.0f); // TODO : 
+        break;
+      case COMM_SAVE_CAL_DATA:
+        stopADC();
+        writeCalibrateData();
+        NVIC_SystemReset();
+        break;
+      case COMM_RESET_CAL_DATA:
+        stopADC();
+        eraseCalibrateData();
+        NVIC_SystemReset();
         break;
       default:
         break;

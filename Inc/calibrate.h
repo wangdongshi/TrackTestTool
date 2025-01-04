@@ -162,6 +162,12 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
 }
 
 int initCalibrateData(void);
+int insertCalibrateRecord(
+  const unsigned short type,
+  const unsigned short seq,
+  const float standVal,
+  const float calibVal
+);
 int writeCalibrateData(void);
 int eraseCalibrateData(void);
 
