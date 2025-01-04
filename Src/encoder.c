@@ -15,7 +15,7 @@
 #include "stm32f4xx_hal.h"
 #include "main.h"
 #include "comm.h"
-#include "calibrator.h"
+#include "calibrate.h"
 
 /* Private macro -------------------------------------------------------------*/
 #define DIRECTION_ENCODER_INSTALL     (1)         // 1 or -1

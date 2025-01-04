@@ -443,6 +443,11 @@
               <FilePath>..\Src\comm.c</FilePath>
             </File>
             <File>
+              <FileName>calibrate.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\calibrate.c</FilePath>
+            </File>
+            <File>
               <FileName>compute.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\compute.c</FilePath>

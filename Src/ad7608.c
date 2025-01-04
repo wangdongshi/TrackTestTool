@@ -13,7 +13,7 @@
 #include <string.h>
 #include "debug.h"
 #include "cmsis_os.h"
-#include "calibrator.h"
+#include "calibrate.h"
 #include "flash.h"
 #include "ad7608.h"
 #include "compute.h"
@@ -59,7 +59,7 @@ extern uint32_t rollADC;
 
 /* Private Variables ---------------------------------------------------------*/
 //const  CAL_TBL tbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
-CAL_TBL tbl = CAL_TBL_DATA;
+extern CAL_TBL tbl;
 uint8_t buff[2][AD7608_DMA_BUFFER_LENGTH] __attribute__((aligned(4))) = {0};
 uint8_t buffIndex = 0;
 float filteredVol[AD7608_CH_NUMBER] = {0.0f}; // filtered ADC data (length = 18 bit) (Must define here!!)
@@ -120,14 +120,6 @@ static void resetADC(void)
   AD7608_RESET_H;
   for (uint16_t i = 0xFF; i != 0; i--);
   AD7608_RESET_L;
-}
-
-void initCalibration(void)
-{
-  if (CheckSectorWithCRC16(11, sizeof(CAL_TBL))) {
-    unsigned int address = 0x08020000 + (11 - 5) * 128 * 1024;
-    memcpy(&tbl, (void*)address, sizeof(CAL_TBL));
-  }
 }
 
 // This function only processes the data of the analog sensor part. 

@@ -15,9 +15,9 @@
 #include "flash.h"
 
 /* Private macro -------------------------------------------------------------*/
-# define CAL_DATA_SECTOR    6
-# define FLASH_FLAG         FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | \
-                            FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR
+# define FLASH_FLAG                 FLASH_FLAG_EOP | FLASH_FLAG_OPERR | \
+                                    FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | \
+                                    FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR
 
 /* Private typedef -----------------------------------------------------------*/
 
@@ -32,7 +32,8 @@ static unsigned short CRC16(const unsigned char* ptr, unsigned short len);
 /* Formal function definitions -----------------------------------------------*/
 int EraseSector(const unsigned short sectorNo)
 {
-  assert_param(sectorNo > 5 && sectorNo < 12);
+  assert_param(sectorNo >= FLASH_OPT_MIN_SECTOR && 
+               sectorNo <= FLASH_OPT_MAX_SECTOR);
   
   unsigned int sectorError = 0;
 
@@ -60,10 +61,12 @@ int WriteSectorData(const unsigned short sectorNo,
                      unsigned char* data, 
                      const unsigned short size)
 {
-  assert_param(sectorNo > 5 && sectorNo < 12);
+  assert_param(sectorNo >= FLASH_OPT_MIN_SECTOR && 
+               sectorNo <= FLASH_OPT_MAX_SECTOR);
   
   unsigned int sectorError = 0;
-  unsigned int address = 0x08020000 + (sectorNo - 5) * 128 * 1024;
+  unsigned int address = FLASH_MIN_SECTOR_ADDRESS + 
+    (sectorNo - FLASH_OPT_MIN_SECTOR) * BYTE_NUM_PER_SECTOR;
 
   // Unlock FLASH
   HAL_FLASH_Unlock();
@@ -71,7 +74,7 @@ int WriteSectorData(const unsigned short sectorNo,
   // Erase FLASH sector
   FLASH_EraseInitTypeDef flashSet;
   flashSet.TypeErase    = FLASH_TYPEERASE_SECTORS;
-  flashSet.Banks        = 1;
+  flashSet.Banks        = FLASH_OPT_BANK;
   flashSet.Sector       = sectorNo;
   flashSet.NbSectors    = 1;
   flashSet.VoltageRange = FLASH_VOLTAGE_RANGE_3;
@@ -95,10 +98,12 @@ int WriteSectorWithCRC16(const unsigned short sectorNo,
                         unsigned char* data, 
                         const unsigned short size)
 {
-  assert_param(sectorNo > 5 && sectorNo < 12);
+  assert_param(sectorNo >= FLASH_OPT_MIN_SECTOR && 
+               sectorNo <= FLASH_OPT_MAX_SECTOR);
   
   unsigned int sectorError = 0;
-  unsigned int address = 0x08020000 + (sectorNo - 5) * 128 * 1024;
+  unsigned int address = FLASH_MIN_SECTOR_ADDRESS + 
+    (sectorNo - FLASH_OPT_MIN_SECTOR) * BYTE_NUM_PER_SECTOR;
   unsigned short crc = CRC16(data, size);
 
   // Unlock FLASH
@@ -107,7 +112,7 @@ int WriteSectorWithCRC16(const unsigned short sectorNo,
   // Erase FLASH sector
   FLASH_EraseInitTypeDef flashSet;
   flashSet.TypeErase    = FLASH_TYPEERASE_SECTORS;
-  flashSet.Banks        = 1;
+  flashSet.Banks        = FLASH_OPT_BANK;
   flashSet.Sector       = sectorNo;
   flashSet.NbSectors    = 1;
   flashSet.VoltageRange = FLASH_VOLTAGE_RANGE_3;
@@ -132,9 +137,11 @@ int WriteSectorWithCRC16(const unsigned short sectorNo,
 
 int CheckSectorWithCRC16(const unsigned short sectorNo, const unsigned short size)
 {
-  assert_param(sectorNo > 5 && sectorNo < 12);
+  assert_param(sectorNo >= FLASH_OPT_MIN_SECTOR && 
+               sectorNo <= FLASH_OPT_MAX_SECTOR);
   
-  unsigned char* ptr = (unsigned char*)(0x08020000 + (sectorNo - 5) * 128 * 1024);
+  unsigned char* ptr = (unsigned char*)(FLASH_MIN_SECTOR_ADDRESS + 
+                       (sectorNo - FLASH_OPT_MIN_SECTOR) * BYTE_NUM_PER_SECTOR);
   
   unsigned short crcCompute = CRC16(ptr, size);
   unsigned short crcOnFlash = ((unsigned short)*(__IO unsigned char*)((unsigned int)ptr + size)) |

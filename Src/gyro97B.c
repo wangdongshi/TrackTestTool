@@ -12,7 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "debug.h"
 #include "stm32f4xx_hal.h"
-#include "calibrator.h"
+#include "calibrate.h"
 #include "comm.h"
 
 /* Private macro -------------------------------------------------------------*/

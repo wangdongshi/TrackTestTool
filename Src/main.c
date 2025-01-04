@@ -55,7 +55,7 @@
 #include <math.h>
 #include "debug.h"
 #include "comm.h"
-#include "calibrator.h"
+#include "calibrate.h"
 #include "ad7608.h"
 #include "gyro97B.h"
 #include "encoder.h"
@@ -987,7 +987,7 @@ void mainTask(void const * argument)
   }
   // -----------------------------------------------------------------------
   
-  initCalibration();
+  initCalibrateData();
   initData();
   startGyro();
   startADC();

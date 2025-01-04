@@ -19,7 +19,7 @@
 #include "cmsis_os.h"
 #include "compute.h"
 #include "ad7608.h"
-#include "calibrator.h"
+#include "calibrate.h"
 #include "comm.h"
 
 #include "../Drivers/CMSIS/DSP_Lib/Source/FilteringFunctions/arm_biquad_cascade_df1_init_f32.c"
