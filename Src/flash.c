@@ -122,7 +122,6 @@ int writeSectorWithCRC16(const unsigned short sectorNo,
 
   // Program FLASH
   for (unsigned short i = 0; i < size; i++) {
-    //unsigned short tmpbuf = (*(data + i + 1) << 8) + (*(data + i));
     unsigned char tmpbuf = *(data + i);
     if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, address + i, tmpbuf) != HAL_OK) return 0;
   }

@@ -107,7 +107,7 @@ osSemaphoreId UserCommandProcessSemHandle;
 #define PROJECT_NAME_LINE4         "/_/    /_/   \_,_/ \__/ /_/\_\      \___/  \__/ \___//_/_/_/\__/ \__/ /_/    \_, / \r\n"
 #define PROJECT_NAME_LINE5         "                                                                            /___/  \r\n"
 
-#define FIRMWARE_VERSION           "0.0.5"
+#define FIRMWARE_VERSION           "0.0.6"
 #define COMPILE_DATE_TIME          __DATE__","__TIME__
 #define PROJECT_NAME               PROJECT_NAME_LINE1\
                                    PROJECT_NAME_LINE2\
@@ -973,22 +973,7 @@ void mainTask(void const * argument)
   assert_param(1 == 1); // for test assert
   printf(BANNER_INFO);
   
-  // for test FLASH reading & writing
-  // -----------------------------------------------------------------------
-  /*
-  char testData[] = "Test flash access.\r\n";
-  if (checkSectorWithCRC16(11, sizeof(testData))) {
-    writeSectorWithCRC16(11, (unsigned char*)testData, sizeof(testData));
-    char resultData[50];
-    unsigned int address = 0x08020000 + (10 - 5) * 128 * 1024;
-    for (int i = 0; i < sizeof(testData); i++) {
-      resultData[i] = *(__IO unsigned int*)(address + i);
-    }
-    printf("%s", resultData);
-  }
-  */
-  // -----------------------------------------------------------------------
-  
+  // initialize system
   initCalibrateData();
   initData();
   startGyro();
@@ -997,6 +982,7 @@ void mainTask(void const * argument)
   startTempSensor();
   startCommunication();
   
+  // main loop process
   while(1) {
     if (workMode == MODE_NORMAL_WORK && trigMode == TRIG_ENCODER) {
       osSemaphoreWait(EncoderArriveSemHandle, osWaitForever);
