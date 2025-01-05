@@ -22,10 +22,10 @@ typedef struct _pair {
 } CAL_PAIR;
 
 typedef enum {
-  CAL_DIST_COMPENSATION = 0,
-  CAL_HEIGHT,
-  CAL_DIP,
-  CAL_DISTANCE,
+  CAL_TRACK_DIST_COMP = 0,
+  CAL_ULTRA_HIGH_COMP,
+  CAL_ULTRA_HIGH,
+  CAL_TRACK_DIST,
   CAL_ITEMS
 } ADC_CAL;
 
@@ -162,8 +162,8 @@ typedef CAL_PAIR CAL_TBL[CAL_ITEMS][CAL_POINTS];
 }
 
 int initCalibrateData(void);
-int insertCalibrateRecord(
-  const unsigned short type,
+void insertCalibrateRecord(
+  const ADC_CAL type,
   const unsigned short seq,
   const float standVal,
   const float calibVal

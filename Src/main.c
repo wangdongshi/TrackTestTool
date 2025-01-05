@@ -975,6 +975,7 @@ void mainTask(void const * argument)
   
   // for test FLASH reading & writing
   // -----------------------------------------------------------------------
+  /*
   char testData[] = "Test flash access.\r\n";
   if (checkSectorWithCRC16(11, sizeof(testData))) {
     writeSectorWithCRC16(11, (unsigned char*)testData, sizeof(testData));
@@ -985,6 +986,7 @@ void mainTask(void const * argument)
     }
     printf("%s", resultData);
   }
+  */
   // -----------------------------------------------------------------------
   
   initCalibrateData();

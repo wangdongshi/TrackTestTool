@@ -165,10 +165,10 @@ void prepareSensorData(void)
   
   // calibrate
   if (workMode == MODE_NORMAL_WORK) {
-    meas.distance_comp= calibrateADCData(CAL_DIST_COMPENSATION, meas.distance_comp);
-    meas.height_comp  = calibrateADCData(CAL_HEIGHT, meas.height_comp);
-    meas.distance     = calibrateADCData(CAL_DISTANCE, meas.distance);
-    meas.height       = calibrateADCData(CAL_DIP, meas.height);
+    meas.distance_comp= calibrateADCData(CAL_TRACK_DIST_COMP, meas.distance_comp);
+    meas.height_comp  = calibrateADCData(CAL_ULTRA_HIGH_COMP, meas.height_comp);
+    meas.distance     = calibrateADCData(CAL_TRACK_DIST, meas.distance);
+    meas.height       = calibrateADCData(CAL_ULTRA_HIGH, meas.height);
   }
 }
 

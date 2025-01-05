@@ -19,6 +19,10 @@
 # define BYTE_NUM_PER_SECTOR        (PAGE_NUM_PER_SECTOR * BYTE_NUM_PER_PAGE)
 # define FLASH_MIN_SECTOR_ADDRESS   0x08020000
 
+typedef enum _CALIB_TYPE {
+  CALIB_
+} CALIB_TYPE;
+
 int eraseSector(const unsigned short sectorNo);
 int writeSectorData(const unsigned short sectorNo, unsigned char* data, const unsigned short size);
 int writeSectorWithCRC16(const unsigned short sectorNo, unsigned char* data, const unsigned short size);

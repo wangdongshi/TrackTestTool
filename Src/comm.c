@@ -124,8 +124,13 @@ void commTask(void const * argument)
         filterDeepth = ((filterDeepth & (filterDeepth - 1)) == 0) ? filterDeepth : 0; // must be 2 to the Nth power
         initFilter();
         break;
-      case COMM_SET_CAL_DATA:
-        insertCalibrateRecord(0, 0, 0.0f, 0.0f); // TODO : 
+      case COMM_SET_CAL_DATA: {
+        ADC_CAL type = (ADC_CAL)swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
+        unsigned short sequency = swapUint16(*(uint16_t*)(&rxMsgBuf[6]));
+        float standVal = swapFloat(*(float*)(&rxMsgBuf[8]));
+        float calibVal = swapFloat(*(float*)(&rxMsgBuf[12]));
+        insertCalibrateRecord(type, sequency, standVal, calibVal);
+      }
         break;
       case COMM_SAVE_CAL_DATA:
         stopADC();

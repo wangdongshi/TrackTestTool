@@ -21,7 +21,7 @@
 /* External Variables --------------------------------------------------------*/
 
 /* Private Variables ---------------------------------------------------------*/
-const CAL_TBL initCalTbl __attribute__((section(".ARM.__at_0x08060000"))) = CAL_TBL_DATA;
+CAL_TBL tmpTbl = CAL_TBL_DATA;
 CAL_TBL calTbl;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -35,29 +35,32 @@ int initCalibrateData(void)
     memcpy((void*)&calTbl, (void*)CAL_DATA_ADDRESS, sizeof(CAL_TBL));
   }
   else {
-    memcpy((void*)&calTbl, (void*)&initCalTbl, sizeof(CAL_TBL));
+    memcpy((void*)&calTbl, (void*)&tmpTbl, sizeof(CAL_TBL));
   }
   
   return result;
 }
 
-int insertCalibrateRecord(
-  const unsigned short type,
+void insertCalibrateRecord(
+  const ADC_CAL type,
   const unsigned short seq,
   const float standVal,
   const float calibVal
 )
 {
-  return 1;
+  CAL_PAIR pair = {standVal, calibVal};
+  void* targetAddr = (void*)((unsigned int)&tmpTbl + 
+                     (type * CAL_POINTS * sizeof(CAL_PAIR)) + 
+                     (seq * sizeof(CAL_PAIR)));
+  memcpy(targetAddr, &pair, sizeof(CAL_PAIR));
 }
 
 int writeCalibrateData(void)
 {
-  return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&calTbl, sizeof(CAL_TBL));
+  return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&tmpTbl, sizeof(CAL_TBL));
 }
 
 int eraseCalibrateData(void)
 {
-  memcpy((void*)&calTbl, (void*)&initCalTbl, sizeof(CAL_TBL));
-  return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&calTbl, sizeof(CAL_TBL));
+  return writeSectorWithCRC16(CAL_DATA_SECTOR, (unsigned char*)&tmpTbl, sizeof(CAL_TBL));
 }
