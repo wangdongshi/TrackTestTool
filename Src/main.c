@@ -897,7 +897,7 @@ static void sendData2PC(void)
   else if (format == OUTPUT_FIREWATER) {
     if (dataMode == DATA_MEASURE) {
       // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-      PRINTF2("DATA : %.3f, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %.4f, %.2f, %.1f, %.3f, %.4f, %.4f, %ld\r\n",
+      PRINTF2("DATA : %.3f, %.3f, %.3f, %.3f, %.3f, %.4f, %.4f, %.4f, %.2f, %.1f, %.3f, %.4f, %.4f, %ld\r\n",
               meas.mileage,
               meas.distance,
               meas.distance_comp,

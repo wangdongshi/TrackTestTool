@@ -29,8 +29,8 @@
 #define USE_LOW_PASS_FILTER                0
 
 #define DENOISE_BUF_DEPTH                  10
-#define ADC_VOLTAGE_UPPER_LIMIT            4.9f
-#define ADC_VOLTAGE_LOWER_LIMIT            0.1f
+#define ADC_VOLTAGE_UPPER_LIMIT            4.97f
+#define ADC_VOLTAGE_LOWER_LIMIT            0.03f
 
 #define STAGE_NUMBER                       2                   // The number of 2nd order biquad filters
 #define DIP_VOL_DATA_BUFFER_LENGTH         9                   // internal time = 50 ms
