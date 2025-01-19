@@ -26,6 +26,7 @@
 #define COMM_RX_BUFFER_SIZE     100
 #define COMM_LEADING_BYTE       0xFFFF
 #define COMM_FLOAT_NAN          0x7F800000
+#define RX_FRAMING_COUNT        999999
 
 /* External variables --------------------------------------------------------*/
 extern UART_HandleTypeDef huart2;
@@ -163,13 +164,21 @@ void uart2RxCallback(void)
   uint32_t idleFlag   = __HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE);
   if(idleFlag == (uint32_t)(RESET)) return; // Only UART2 idle interrupt is handled here.
   
+  // Check framing count
+  static int count = 0;
+  if (count++ < RX_FRAMING_COUNT) return;
+  count = 0;
+  
   // Check message content
   if (((rxBuffer[0] << 8) | rxBuffer[1]) != COMM_LEADING_BYTE) { // Pre-guide code is error.
     HAL_UART_RX_Reset(&huart2, rxBuffer);
     return;
   }
+  
   uint16_t remainder  = __HAL_DMA_GET_COUNTER(&hdma_usart2_rx);
   uint16_t length     = COMM_RX_BUFFER_SIZE - remainder;
+  //for (int i = 0; i < length; i++) printf("%02x ", rxBuffer[i]);
+  //printf("\r\n");
   uint16_t crc16      = swapUint16(calcCRC16(&rxBuffer[2], (length - 4))); // // Add modbus CRC
   if (crc16 != ((rxBuffer[length - 2] << 8) | rxBuffer[length - 1])) {
     HAL_UART_RX_Reset(&huart2, rxBuffer);
