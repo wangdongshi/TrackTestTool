@@ -35,14 +35,13 @@ typedef enum {
 static int16_t direction;
 static uint8_t tim5Overflow = 0;
 static DIRECTION_ENCODER currentDirection, previousDirection;
-static uint32_t counter = (uint32_t)(TESTER_TRIGGER_DISTANCE * 
-  ENCODER_MULTI_FREQ * ENCODER_PULSE_RATE / MILEAGE_WHEEL_DIAMETER / PI);
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim7;
 extern osSemaphoreId EncoderArriveSemHandle;
+extern CAL_TBL calTbl;
 extern TRACK_MEAS_ITEM meas;
 extern uint16_t measBackupFlg;
 extern DIRECTION_MODE directionMode;
@@ -53,6 +52,9 @@ static void initEncoder(void);
 /* Formal function definitions -----------------------------------------------*/
 static void initEncoder(void)
 {
+  uint32_t counter = (uint32_t)(TESTER_TRIGGER_DISTANCE * ENCODER_MULTI_FREQ * 
+                     ENCODER_PULSE_RATE / calTbl.wheel_diameter / PI);
+  
   // initialize encoder direction flag
   currentDirection = (__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim1)) ? BACKWARD : FORWARD;
   previousDirection = currentDirection;

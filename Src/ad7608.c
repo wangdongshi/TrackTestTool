@@ -37,6 +37,7 @@
 #define AD7608_RESET_L   LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_7)
 #define AD7608_BUSY       LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_4)
 
+#define TILT_AXIS_MISALIGNMENT_ANGLE     0.0f
 #define INERTIAL_SENSOR_ZERO_OUTPUT      2.50f              // 2.47 to 2.53
 #define CIRCULAR_ANGLE_DEGREE            360.0f             // Unit : degree
 #define STANDARD_TRACK_DISTANCE          1505.0f            // Unit : mm
@@ -155,7 +156,7 @@ void prepareSensorData(void)
   // calculate dip angle and track height
   if (ultraHighReplaceCnt > 0) vol[TRACK_DIP_A1] = ultraHighReplaceVal;
   // Angle = arcsin((E0-Eb)/SF)-Theta
-  sinRoll = (vol[TRACK_DIP_A1] - INERTIAL_SENSOR_ZERO_OUTPUT) / TILT_SCALE_FACTOR;
+  sinRoll = (vol[TRACK_DIP_A1] - INERTIAL_SENSOR_ZERO_OUTPUT) / calTbl.tilt_scale;
   osMutexRelease(ADCSamplingMutexHandle);
   if (sinRoll > +1.0f) sinRoll = +1.0f;
   if (sinRoll < -1.0f) sinRoll = -1.0f;
@@ -180,18 +181,18 @@ static float calibrateADCData(ADC_CAL item, float raw)
   float alpha, result;
   
   for (index = 0; index < CAL_POINTS; index++) {
-    if (isnan(calTbl[item][index].meas)) return calTbl[item][index - 1].real; // overflow
-    if (calTbl[item][index].meas == raw) return calTbl[item][index].real;
-    if (calTbl[item][index].meas > raw) break;
+    if (isnan(calTbl.adc_cal[item][index].meas)) return calTbl.adc_cal[item][index - 1].real; // overflow
+    if (calTbl.adc_cal[item][index].meas == raw) return calTbl.adc_cal[item][index].real;
+    if (calTbl.adc_cal[item][index].meas > raw) break;
   }
   
-  if (index == 0) return calTbl[item][0].real; // underflow
-  if (index == CAL_POINTS) return calTbl[item][index - 1].real; // overflow
+  if (index == 0) return calTbl.adc_cal[item][0].real; // underflow
+  if (index == CAL_POINTS) return calTbl.adc_cal[item][index - 1].real; // overflow
   
-  alpha = (calTbl[item][index].meas - raw) /
-          (calTbl[item][index].meas - calTbl[item][index - 1].meas);
-  result = calTbl[item][index].real - alpha * 
-          (calTbl[item][index].real - calTbl[item][index - 1].real);
+  alpha = (calTbl.adc_cal[item][index].meas - raw) /
+          (calTbl.adc_cal[item][index].meas - calTbl.adc_cal[item][index - 1].meas);
+  result = calTbl.adc_cal[item][index].real - alpha * 
+          (calTbl.adc_cal[item][index].real - calTbl.adc_cal[item][index - 1].real);
   
   return result;
 }

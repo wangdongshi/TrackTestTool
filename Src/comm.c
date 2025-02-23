@@ -125,12 +125,28 @@ void commTask(void const * argument)
         filterDeepth = ((filterDeepth & (filterDeepth - 1)) == 0) ? filterDeepth : 0; // must be 2 to the Nth power
         initFilter();
         break;
-      case COMM_SET_CAL_DATA: {
+      case COMM_SET_CAL_ADC: {
         ADC_CAL type = (ADC_CAL)swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
         unsigned short sequency = swapUint16(*(uint16_t*)(&rxMsgBuf[6]));
         float standVal = swapFloat(*(float*)(&rxMsgBuf[8]));
         float calibVal = swapFloat(*(float*)(&rxMsgBuf[12]));
-        insertCalibrateRecord(type, sequency, standVal, calibVal);
+        insertCalADCRecord(type, sequency, standVal, calibVal);
+      }
+        break;
+      case COMM_SET_CAL_WHEEL_DIAMETER: {
+        float diameter = swapFloat(*(float*)(&rxMsgBuf[4]));
+        updateCalWheelDiameter(diameter);
+      }
+        break;
+      case COMM_SET_CAL_GYRO_SCALE:  {
+        unsigned short no = swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
+        float scale = swapFloat(*(float*)(&rxMsgBuf[6]));
+        updateCalGyroScale(no, scale);
+      }
+        break;
+      case COMM_SET_CAL_TILT_SCALE: {
+        float scale = swapFloat(*(float*)(&rxMsgBuf[4]));
+        updateCalTiltScale(scale);
       }
         break;
       case COMM_SAVE_CAL_DATA:

@@ -41,7 +41,7 @@ int initCalibrateData(void)
   return result;
 }
 
-void insertCalibrateRecord(
+void insertCalADCRecord(
   const ADC_CAL type,
   const unsigned short seq,
   const float standVal,
@@ -53,6 +53,29 @@ void insertCalibrateRecord(
                      (type * CAL_POINTS * sizeof(CAL_PAIR)) + 
                      (seq * sizeof(CAL_PAIR)));
   memcpy(targetAddr, &pair, sizeof(CAL_PAIR));
+}
+
+void updateCalWheelDiameter(const float diameter)
+{
+  void* targetAddr = (void*)((unsigned int)&tmpTbl + 
+                     sizeof(CAL_PAIR) * CAL_ITEMS * CAL_POINTS);
+  memcpy(targetAddr, &diameter, sizeof(float));
+}
+
+void updateCalGyroScale(const unsigned short no, const float scale)
+{
+  void* targetAddr = (void*)((unsigned int)&tmpTbl + 
+                     sizeof(CAL_PAIR) * CAL_ITEMS * CAL_POINTS +
+                     sizeof(float) /*wheel diameter*/ + sizeof(float) * no);
+  memcpy(targetAddr, &scale, sizeof(float));
+}
+
+void updateCalTiltScale(const float scale)
+{
+  void* targetAddr = (void*)((unsigned int)&tmpTbl + 
+                     sizeof(CAL_PAIR) * CAL_ITEMS * CAL_POINTS +
+                     sizeof(float) * 3);
+  memcpy(targetAddr, &scale, sizeof(float));
 }
 
 int writeCalibrateData(void)

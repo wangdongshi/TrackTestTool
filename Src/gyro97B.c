@@ -30,6 +30,7 @@ typedef enum {
 /* External Variables --------------------------------------------------------*/
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart5;
+extern CAL_TBL calTbl;
 extern TRACK_MEAS_ITEM meas;
 extern GYRO_MODE gyroMode;
 
@@ -77,7 +78,7 @@ void uart4RxCallback(void)
   gyro_24bit = (int32_t)(gyro_24bit ^ 0x00800000) - (int32_t)0x00800000;
   
   // Transfer raw data to angular velocity
-  meas.omega1 = (float)gyro_24bit / GYRO_SCALE_FACTOR1;
+  meas.omega1 = (float)gyro_24bit / calTbl.gyro1_scale;
   
   // Process gyro zero drift
   if (gyroMode == GYRO_OFFSET_HOLD) {
@@ -115,7 +116,7 @@ void uart5RxCallback(void)
   gyro_24bit = (int32_t)(gyro_24bit ^ 0x00800000) - (int32_t)0x00800000;
   
   // Transfer raw data to angular velocity
-  meas.omega2 = (float)gyro_24bit / GYRO_SCALE_FACTOR2;
+  meas.omega2 = (float)gyro_24bit / calTbl.gyro2_scale;
   
   // Process gyro zero drift
   if (gyroMode == GYRO_OFFSET_HOLD) {
