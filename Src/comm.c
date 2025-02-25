@@ -139,8 +139,8 @@ void commTask(void const * argument)
       }
         break;
       case COMM_SET_CAL_GYRO_SCALE:  {
-        unsigned short no = swapUint16(*(uint16_t*)(&rxMsgBuf[4]));
-        float scale = swapFloat(*(float*)(&rxMsgBuf[6]));
+        unsigned short no = swapUint16(*(uint16_t*)(&rxMsgBuf[8]));
+        float scale = swapFloat(*(float*)(&rxMsgBuf[4]));
         updateCalGyroScale(no, scale);
       }
         break;
