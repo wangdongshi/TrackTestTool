@@ -80,6 +80,7 @@ void commTask(void const * argument)
     osSemaphoreWait(UserCommandProcessSemHandle, osWaitForever);
     if (*((uint16_t*)rxMsgBuf) == 0) continue; // remove interference message on UART2
     COMM_TYPE type = (COMM_TYPE)swapUint16(*(uint16_t*)(&rxMsgBuf[2]));
+    if (type < COMM_NUMBER_MAX) meas.cmd_count++;
     switch (type) {
       case COMM_SET_WORK_MODE:
         workMode = (WORK_MODE)swapUint16(*(uint16_t*)(&rxMsgBuf[8]));

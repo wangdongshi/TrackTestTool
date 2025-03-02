@@ -177,6 +177,7 @@ typedef struct _meas {
   float omega2;       // measure by gyro2
   uint32_t rollADC;
   uint32_t sequence;
+  uint32_t cmd_count;
 } TRACK_MEAS_ITEM;
 /* USER CODE END Private defines */
 

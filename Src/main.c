@@ -107,7 +107,7 @@ osSemaphoreId UserCommandProcessSemHandle;
 #define PROJECT_NAME_LINE4         "/_/    /_/   \_,_/ \__/ /_/\_\      \___/  \__/ \___//_/_/_/\__/ \__/ /_/    \_, / \r\n"
 #define PROJECT_NAME_LINE5         "                                                                            /___/  \r\n"
 
-#define FIRMWARE_VERSION           "0.0.6"
+#define FIRMWARE_VERSION           "0.0.7"
 #define COMPILE_DATE_TIME          __DATE__","__TIME__
 #define PROJECT_NAME               PROJECT_NAME_LINE1\
                                    PROJECT_NAME_LINE2\
@@ -897,7 +897,7 @@ static void sendData2PC(void)
   else if (format == OUTPUT_FIREWATER) {
     if (dataMode == DATA_MEASURE) {
       // In debug mode, the data can be confirmed by VOFA+ FireWater engine.
-      PRINTF2("DATA : %.3f, %.3f, %.3f, %.3f, %.3f, %.4f, %.4f, %.4f, %.2f, %.1f, %.3f, %.4f, %.4f, %ld\r\n",
+      PRINTF2("DATA : %.3f, %.3f, %.3f, %.3f, %.3f, %.4f, %.4f, %.4f, %.2f, %.1f, %.3f, %.4f, %.4f, %ld, %ld\r\n",
               meas.mileage,
               meas.distance,
               meas.distance_comp,
@@ -911,7 +911,8 @@ static void sendData2PC(void)
               meas.speed,
               meas.omega1,
               meas.omega2,
-              meas.sequence
+              meas.sequence,
+              meas.cmd_count
       );
     }
     else if (dataMode == DATA_TEST) {
